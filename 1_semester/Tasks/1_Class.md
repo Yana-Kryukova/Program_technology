@@ -337,9 +337,9 @@ erDiagram
         int    Year
     }
     SESSION {
-        int      Id      PK
-        int      MovieId FK
-        TimeSpan Time
+        int      Id        PK
+        int      MovieId   FK
+        TimeSpan StartTime
         int      Hall
         decimal  Price
     }
@@ -351,12 +351,12 @@ erDiagram
 
 **`Movie`** — `Id`, `Title`, `GenreId`, `Duration`, `Year`; `IsLong` (`Duration > 120`); `GetInfo()` — `"Интерстеллар (2014, 169 мин)"`.
 
-**`Session`** — `Id`, `MovieId`, `Time`, `Hall`, `Price`; `IsEvening` (`Time >= 18:00`); `GetInfo()` — `"18:30, зал 3, 450 руб."`.
+**`Session`** — `Id`, `MovieId`, `StartTime`, `Hall`, `Price`; `IsEvening` (`Time >= 18:00`); `GetInfo()` — `"18:30, зал 3, 450 руб."`.
 
 ### Правила предметной области
 
 - `Title` фильма уникален. `Name` жанра уникален.
-- `Time` в CSV — `HH:mm`. `Price` ≥ 0.
+- `StartTime` в CSV — `HH:mm`. `Price` ≥ 0.
 
 ### Репозитории
 
