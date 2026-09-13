@@ -1,24 +1,25 @@
 # ДОМАШНЕЕ ЗАДАНИЕ: Работа с классами, коллекциями и источниками данных
 
-**Дисциплина:** Технологии программирования  (язык C#)  
-**Тема:** Классы, коллекции, работа с CSV  
-**Форма сдачи:** проект C# (Console Application) 
+**Дисциплина:** Технологии программирования (язык C#)
+
+**Тема:** Классы, коллекции, работа с CSV
+
+**Форма сдачи:** проект C# (Console Application)
+
 **Срок сдачи:** согласно расписанию
 
 ---
 
 ## Чему научится студент
 
-Выполнив это задание, студент научится:
-
-1. **Проектировать классы** предметной области на основе ERD-диаграммы: выделять сущности, их свойства и связи.
-2. **Использовать автосвойства и вычисляемые свойства** — различать, когда нужна простая автосвойства, а когда — вычисляемое свойство с логикой.
-3. **Реализовывать методы класса** — там, где нужны параметры или сложная логика, а не просто возврат значения.
-4. **Работать с коллекциями** — `List<T>`, `Dictionary<TKey, TValue>`, массивами — без использования LINQ.
-5. **Организовывать загрузку данных** из двух источников: в памяти (`InMemoryRepository`) и из CSV-файлов (`CsvRepository`).
-6. **Строить связи между сущностями** через внешние ключи и находить связанные объекты вручную (цикл + `if`).
-7. **Реализовывать аналитические методы** — группировку, сортировку, поиск максимума/минимума, подсчёт статистики.
-8. **Оформлять код по стандартам C#**: правильное именование, разбиение по файлам, разделение ответственности.
+1. **Проектировать классы** предметной области на основе ERD-диаграммы.
+2. **Использовать автосвойства и вычисляемые свойства.**
+3. **Реализовывать методы класса.**
+4. **Работать с коллекциями** — `List<T>`, `Dictionary<TKey, TValue>`, массивами — без LINQ.
+5. **Организовывать загрузку данных из двух источников** — `InMemoryRepository` и `CsvRepository`.
+6. **Строить связи между сущностями** через внешние ключи.
+7. **Реализовывать аналитические методы** — группировку, сортировку, поиск максимума/минимума.
+8. **Оформлять код по стандартам C#.**
 
 ---
 
@@ -37,35 +38,129 @@
 
 ### Файлы
 
-- **Каждый класс — в отдельном файле** с именем, совпадающим с именем класса: `Publisher.cs`, `Book.cs`, `InMemoryRepository.cs`, `CsvRepository.cs`, `Program.cs`.
+- **Каждый класс — в отдельном файле** с именем, совпадающим с именем класса.
 - Один файл — один публичный класс.
 
 ### Прочее
 
 - **Запрещено:** LINQ (`Where`, `Select`, `First`, `Sum`, `Average`, `OrderBy`).
 - **Разрешено:** `List<T>`, `Dictionary<TKey, TValue>`, массивы, циклы `for`/`foreach`, `if`, `switch`.
-- **ВАЖНО!!!! Комментарии:** `/// <summary>` для классов и публичных методов.
+- **Комментарии:** `/// <summary>` для классов и публичных методов.
 
 ---
 
-## Создание классов InMemory для тестирования
+## Как читать ERD в этом задании
 
-Для **каждого** варианта создаётся класс `InMemoryRepository`, который хранит тестовые данные в памяти.
+ERD (Entity-Relationship Diagram) — схема сущностей и связей. По ней вы определяете, **какие классы создавать**, **какие у них свойства, типы и обязательность**, **как организовать связи** через внешние ключи.
 
-### Требования
+### Обозначения на диаграмме
 
-1. **Приватные поля** — `List<T>` для каждой сущности варианта.
-2. **Конструктор** — заполняет списки тестовыми данными (не менее 5 записей на сущность).
-3. **Публичные методы** `Get<Сущность>()` — возвращают соответствующий список.
-4. **Без LINQ** — только циклы и `if`.
-5. **Данные должны быть согласованы** — внешние ключи должны ссылаться на существующие записи.
+| Пометка | Значение |
+|---------|----------|
+| **PK** | Первичный ключ. Уникален, всегда заполнен. |
+| **FK** | Внешний ключ. Ссылается на `PK` другой сущности. |
+| Тип с `?` (`int?`, `string?`) | Свойство **необязательное**, может быть `null`. |
+| Тип без `?` | Свойство **обязательное**. |
+| `\|\|--o{` | Один-ко-многим: слева — одна запись, справа — 0 или более. |
+| `\|\|--\|{` | Один-ко-многим: минимум одна запись справа. |
 
-### Пример (вариант «Библиотека»)
+Типы — C#-типы: `int`, `string`, `double`, `decimal`, `DateTime`, `bool`.
 
+### Что извлекать из ERD
+
+1. **Список классов** — все сущности.
+2. **Свойства классов** — поля и их типы.
+3. **Обязательность свойств** — наличие `?`.
+4. **Направление связи** — по стороне, где нарисован `o{` (там лежит FK).
+5. **Алгоритм поиска связанного объекта** — по имени FK.
+
+### Чего в ERD нет
+
+ERD не описывает вычисляемые свойства, методы классов, поведение при отсутствии результата, формат вывода, бизнес-правила, форматы CSV.
+
+### Структура каждого варианта
+
+1. **ERD** 2. **Классы** 3. **Правила предметной области** 4. **Репозитории** 5. **Методы программы** 6. **Пример вывода**.
+
+---
+
+## Репозитории: два источника данных
+
+**В каждом варианте обязательно реализуются ОБА репозитория** с одинаковым набором методов `Get<Сущность>()`.
+
+| Репозиторий | Источник | Где хранится |
+|-------------|----------|--------------|
+| `InMemoryRepository` | Тестовые данные в коде | В памяти |
+| `CsvRepository` | CSV-файлы в папке `data` | На диске |
+
+**Требования к `InMemoryRepository`:** приватные `List<T>` на каждую сущность; конструктор заполняет ≥ 5 записей; публичные `Get<Сущность>()`; без LINQ; внешние ключи согласованы.
+
+**Требования к `CsvRepository`:** отдельный CSV-файл на каждую сущность; первая строка — заголовки; разделитель — запятая; парсинг через `int.Parse`, `double.Parse`, `DateTime.ParseExact`; без LINQ; проверка, что файл не пуст.
+
+**Выбор источника в `Main` — через `switch`:**
 ```csharp
-/// <summary>
-/// Хранилище тестовых данных в памяти
-/// </summary>
+switch (choice)
+{
+    case 1: /* загрузка из InMemoryRepository */ break;
+    case 2: /* загрузка из CsvRepository("data") */ break;
+    default: Console.WriteLine("Неверный выбор"); return;
+}
+```
+Дальше вся логика работает с `List<T>` и не знает, откуда данные.
+
+---
+
+## Пример: Библиотека (подробный разбор)
+
+Этот пример **не входит** в список вариантов. Он показывает, как читать ERD и как писать код.
+
+### ERD
+
+```mermaid
+erDiagram
+    PUBLISHER ||--o{ BOOK : "публикует"
+    AUTHOR    ||--o{ BOOK : "пишет"
+
+    PUBLISHER {
+        int    Id   PK
+        string Name
+        string City
+    }
+    AUTHOR {
+        int    Id       PK
+        string FullName
+        string Country
+    }
+    BOOK {
+        int    Id          PK
+        string Title
+        int    Year
+        int    PublisherId FK
+        int    AuthorId    FK
+        int    Pages
+    }
+```
+
+### Классы
+
+**`Publisher`** — `Id`, `Name`, `City`; `Info` — `"Эксмо (Москва)"`.
+
+**`Author`** — `Id`, `FullName`, `Country`; `GetInfo()` — `"Лев Толстой (Россия)"`.
+
+**`Book`** — `Id`, `Title`, `Year`, `PublisherId`, `AuthorId`, `Pages`; `IsBig` (`Pages > 500`); `GetInfo()` — `"Война и мир (1869, 1225 стр.)"`.
+
+### Правила предметной области
+
+- `Id` уникален в пределах коллекции.
+- `Title` книги **не уникально** — поиск возвращает **первую** найденную.
+- `Year` — 0–2100. `Pages` > 0.
+
+### Репозитории
+
+`GetPublishers()`, `GetAuthors()`, `GetBooks()` — в обоих репозиториях.
+
+**`InMemoryRepository`** (пример):
+```csharp
 public class InMemoryRepository
 {
     private List<Publisher> _publishers;
@@ -78,149 +173,50 @@ public class InMemoryRepository
         {
             new Publisher { Id = 1, Name = "Эксмо", City = "Москва" },
             new Publisher { Id = 2, Name = "Питер", City = "Санкт-Петербург" },
-            new Publisher { Id = 3, Name = "АСТ", City = "Москва" }
+            new Publisher { Id = 3, Name = "АСТ",  City = "Москва" }
         };
-
         _authors = new List<Author>
         {
-            new Author { Id = 1, FullName = "Лев Толстой", Country = "Россия" },
+            new Author { Id = 1, FullName = "Лев Толстой",       Country = "Россия" },
             new Author { Id = 2, FullName = "Фёдор Достоевский", Country = "Россия" },
-            new Author { Id = 3, FullName = "Антон Чехов", Country = "Россия" }
+            new Author { Id = 3, FullName = "Антон Чехов",       Country = "Россия" }
         };
-
         _books = new List<Book>
         {
-            new Book { Id = 1, Title = "Война и мир", Year = 1869, PublisherId = 1, AuthorId = 1, Pages = 1225 },
-            new Book { Id = 2, Title = "Анна Каренина", Year = 1877, PublisherId = 1, AuthorId = 1, Pages = 864 },
-            new Book { Id = 3, Title = "Преступление и наказание", Year = 1866, PublisherId = 2, AuthorId = 2, Pages = 671 },
-            new Book { Id = 4, Title = "Идиот", Year = 1869, PublisherId = 2, AuthorId = 2, Pages = 640 },
-            new Book { Id = 5, Title = "Вишнёвый сад", Year = 1904, PublisherId = 3, AuthorId = 3, Pages = 96 }
+            new Book { Id = 1, Title = "Война и мир",              Year = 1869, PublisherId = 1, AuthorId = 1, Pages = 1225 },
+            new Book { Id = 2, Title = "Анна Каренина",            Year = 1877, PublisherId = 1, AuthorId = 1, Pages = 864  },
+            new Book { Id = 3, Title = "Преступление и наказание", Year = 1866, PublisherId = 2, AuthorId = 2, Pages = 671  },
+            new Book { Id = 4, Title = "Идиот",                    Year = 1869, PublisherId = 2, AuthorId = 2, Pages = 640  },
+            new Book { Id = 5, Title = "Вишнёвый сад",             Year = 1904, PublisherId = 3, AuthorId = 3, Pages = 96   }
         };
     }
-
     public List<Publisher> GetPublishers() { return _publishers; }
-    public List<Author> GetAuthors() { return _authors; }
-    public List<Book> GetBooks() { return _books; }
+    public List<Author>    GetAuthors()    { return _authors; }
+    public List<Book>      GetBooks()      { return _books; }
 }
 ```
 
----
-
-## Считывание информации из CSV
-
-Для **каждого** варианта создаётся класс `CsvRepository`, который читает данные из CSV-файлов в папке `data`.
-
-### Требования
-
-1. **Отдельный CSV-файл** на каждую сущность: например, `publishers.csv`, `authors.csv`, `books.csv`.
-2. **Первая строка** — заголовки (пропускается при чтении).
-3. **Разделитель** — запятая.
-4. **Парсинг** — `int.Parse`, `double.Parse`.
-5. **Без LINQ** — `File.ReadAllLines`, `Split`, циклы, `if`.
-6. **Обработка ошибок** — проверка, что файл не пустой.
-7. **Возвращаемый тип** — `List<T>`.
-
-### Пример CSV-файлов (вариант «Библиотека»)
-
-`data/publishers.csv`:
+**`CsvRepository`** — те же данные в `data/publishers.csv`, `data/authors.csv`, `data/books.csv`. Формат CSV:
 ```
 Id,Name,City
 1,Эксмо,Москва
-2,Питер,Санкт-Петербург
-3,АСТ,Москва
+...
 ```
-
-`data/authors.csv`:
-```
-Id,FullName,Country
-1,Лев Толстой,Россия
-2,Фёдор Достоевский,Россия
-3,Антон Чехов,Россия
-```
-
-`data/books.csv`:
-```
-Id,Title,Year,PublisherId,AuthorId,Pages
-1,Война и мир,1869,1,1,1225
-2,Анна Каренина,1877,1,1,864
-3,Преступление и наказание,1866,2,2,671
-4,Идиот,1869,2,2,640
-5,Вишнёвый сад,1904,3,3,96
-```
-
-### Пример класса CsvRepository
-
 ```csharp
-/// <summary>
-/// Чтение данных из CSV-файлов
-/// </summary>
 public class CsvRepository
 {
     private string _basePath;
-
-    public CsvRepository(string basePath)
-    {
-        _basePath = basePath;
-    }
-
-    public List<Publisher> GetPublishers()
-    {
-        List<Publisher> result = new List<Publisher>();
-        string[] lines = File.ReadAllLines(Path.Combine(_basePath, "publishers.csv"));
-
-        if (lines.Length < 2) return result;
-
-        for (int i = 1; i < lines.Length; i++)
-        {
-            string[] parts = lines[i].Split(',');
-            if (parts.Length < 3) continue;
-
-            Publisher p = new Publisher();
-            p.Id = int.Parse(parts[0]);
-            p.Name = parts[1];
-            p.City = parts[2];
-
-            result.Add(p);
-        }
-
-        return result;
-    }
-
-    public List<Author> GetAuthors()
-    {
-        List<Author> result = new List<Author>();
-        string[] lines = File.ReadAllLines(Path.Combine(_basePath, "authors.csv"));
-
-        if (lines.Length < 2) return result;
-
-        for (int i = 1; i < lines.Length; i++)
-        {
-            string[] parts = lines[i].Split(',');
-            if (parts.Length < 3) continue;
-
-            Author a = new Author();
-            a.Id = int.Parse(parts[0]);
-            a.FullName = parts[1];
-            a.Country = parts[2];
-
-            result.Add(a);
-        }
-
-        return result;
-    }
+    public CsvRepository(string basePath) { _basePath = basePath; }
 
     public List<Book> GetBooks()
     {
         List<Book> result = new List<Book>();
         string[] lines = File.ReadAllLines(Path.Combine(_basePath, "books.csv"));
-
         if (lines.Length < 2) return result;
-
         for (int i = 1; i < lines.Length; i++)
         {
             string[] parts = lines[i].Split(',');
             if (parts.Length < 6) continue;
-
             Book b = new Book();
             b.Id = int.Parse(parts[0]);
             b.Title = parts[1];
@@ -228,44 +224,11 @@ public class CsvRepository
             b.PublisherId = int.Parse(parts[3]);
             b.AuthorId = int.Parse(parts[4]);
             b.Pages = int.Parse(parts[5]);
-
             result.Add(b);
         }
-
         return result;
     }
-}
-```
-
-### Выбор источника в Main
-
-```csharp
-Console.WriteLine("Выберите источник данных:");
-Console.WriteLine("1 - InMemory");
-Console.WriteLine("2 - CSV");
-int choice = int.Parse(Console.ReadLine());
-
-List<Publisher> publishers;
-List<Author> authors;
-List<Book> books;
-
-switch (choice)
-{
-    case 1:
-        var mem = new InMemoryRepository();
-        publishers = mem.GetPublishers();
-        authors = mem.GetAuthors();
-        books = mem.GetBooks();
-        break;
-    case 2:
-        var csv = new CsvRepository("data");
-        publishers = csv.GetPublishers();
-        authors = csv.GetAuthors();
-        books = csv.GetBooks();
-        break;
-    default:
-        Console.WriteLine("Неверный выбор");
-        return;
+    // GetPublishers(), GetAuthors() — по аналогии
 }
 ```
 
@@ -273,1424 +236,2171 @@ switch (choice)
 
 ## Вариант 1. Космодром
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    MISSION   ||--o{ ROCKET : "запускает"
+    COSMONAUT ||--o{ ROCKET : "пилотирует"
+
+    MISSION {
+        int      Id     PK
+        string   Name
+        DateTime Date
+        string   Target
+    }
+    ROCKET {
+        int    Id          PK
+        string Model
+        int    MissionId   FK
+        int    CosmonautId FK
+        int    Fuel
+        int    Payload
+    }
+    COSMONAUT {
+        int    Id         PK
+        string FullName
+        int    Experience
+        string Rank
+    }
 ```
-Mission (1) ────< Rocket >──── (1) Cosmonaut
-  Id              Id             Id
-  Name            Model          FullName
-  Date            MissionId      RocketId
-  Target          CosmonautId    Experience
-                  Fuel           Rank
-                  Payload
+
+Из ERD: у ракеты ровно одна миссия и ровно один космонавт (оба FK обязательны).
+
+### Классы
+
+**`Mission`** — `Id`, `Name`, `Date`, `Target`; `Info` — `"Луна-25 (01.09.2025, Луна)"`.
+
+**`Cosmonaut`** — `Id`, `FullName`, `Experience`, `Rank`; `IsExperienced` (`Experience > 5`); `GetInfo()` — `"Иванов И.И. (10 лет, капитан)"`.
+
+**`Rocket`** — `Id`, `Model`, `MissionId`, `CosmonautId`, `Fuel`, `Payload`; `IsHeavy` (`Payload > 5000`); `GetInfo()` — `"Союз-2 (12000 кг полезной нагрузки)"`.
+
+### Правила предметной области
+
+- `Id` уникален в пределах коллекции.
+- `Model` ракеты **не уникальна** — поиск возвращает **первую** найденную.
+- `Date` в CSV — `dd.MM.yyyy`. `Fuel`, `Payload` — кг.
+
+### Репозитории
+
+`GetMissions()`, `GetCosmonauts()`, `GetRockets()` — в обоих репозиториях.
+
+### Методы программы
+
+**1. Поиск космонавта по модели ракеты.** Передаётся модель. Найти **первую** ракету с такой моделью, затем по `CosmonautId` — космонавта. Не найдено — `null`.
+
+**2. Поиск миссии для ракеты.** Передаётся объект ракеты. Не найдено — `null`.
+
+**3. Суммарная полезная нагрузка.** Сумма `Payload`. Пустой список — `0`.
+
+**4. Группировка космонавтов по званию.** `Dictionary<string, List<Cosmonaut>>`. Порядок ключей — по первому появлению.
+
+**5. Вывод всех ракет.** `"<Model>" — космонавт <FullName>, миссия "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
-
-**Классы, свойства и методы:**
-
-**`Mission`**
-- Свойства: `Id`, `Name`, `Date`, `Target`
-- Вычисляемое свойство `Info` — `"Луна-25 (01.09.2025, Луна)"`
-
-**`Cosmonaut`**
-- Свойства: `Id`, `FullName`, `RocketId`, `Experience`, `Rank`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 5`
-- Метод `GetInfo()` — `"Иванов И.И. (10 лет, капитан)"`
-
-**`Rocket`**
-- Свойства: `Id`, `Model`, `MissionId`, `CosmonautId`, `Fuel`, `Payload`
-- Вычисляемое свойство `IsHeavy` — `true`, если `Payload > 5000`
-- Метод `GetInfo()` — `"Союз-2 (12000 кг полезной нагрузки)"`
-
-**Репозитории:** `GetMissions()`, `GetCosmonauts()`, `GetRockets()`
-
-**Методы программы:**
-- `FindCosmonaut(rockets, cosmonauts, model)` — космонавт ракеты.
-- `FindMission(missions, rocket)` — миссия ракеты.
-- `GetTotalPayload(rockets)` — общая полезная нагрузка.
-- `GetCosmonautsByRank(cosmonauts)` — `Dictionary<string, List<Cosmonaut>>`: группировка по званию.
-- `PrintAllRockets(rockets, cosmonauts, missions)` — вывод ракет.
-
-**Вывод:**
-```
-Количество ракет: 5, космонавтов: 6
+1. FindCosmonaut("Союз-2"): Иванов И.И. (10 лет, капитан)
+2. FindMission(rocket "Союз-2"): Луна-25 (01.09.2025, Луна)
+3. GetTotalPayload: 42000 кг
+4. GetCosmonautsByRank: Капитан — 2, Майор — 2, Лейтенант — 1
+5. PrintAllRockets:
 "Союз-2" — космонавт Иванов И.И., миссия "Луна-25"
-Общая полезная нагрузка: 12000 кг
-Космонавты по званиям: Капитан — 2, Майор — 3, Лейтенант — 1
+"Протон-М" — космонавт Петров П.П., миссия "Марс-1"
+"Ангара-А5" — космонавт Сидоров С.С., миссия "Венера-Д"
+"Союз-2" — космонавт Орлов А.А., миссия "Луна-26"
+"Восток" — космонавт Соколов П.П., миссия "Луна-25"
+
+Не найдено: FindCosmonaut("Буран") → null
 ```
 
 ---
 
 ## Вариант 2. Кинотеатр
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    GENRE ||--o{ MOVIE   : "жанр"
+    MOVIE ||--o{ SESSION : "идёт в"
+
+    GENRE {
+        int    Id   PK
+        string Name
+    }
+    MOVIE {
+        int    Id       PK
+        string Title
+        int    GenreId  FK
+        int    Duration
+        int    Year
+    }
+    SESSION {
+        int      Id      PK
+        int      MovieId FK
+        TimeSpan Time
+        int      Hall
+        decimal  Price
+    }
 ```
-Genre (1) ────< Movie >──── (1) Session
-  Id              Id              Id
-  Name            Title           MovieId
-                  GenreId         Time
-                  Duration        Hall
-                  Year            Price
+
+### Классы
+
+**`Genre`** — `Id`, `Name`; `Info` — название жанра.
+
+**`Movie`** — `Id`, `Title`, `GenreId`, `Duration`, `Year`; `IsLong` (`Duration > 120`); `GetInfo()` — `"Интерстеллар (2014, 169 мин)"`.
+
+**`Session`** — `Id`, `MovieId`, `Time`, `Hall`, `Price`; `IsEvening` (`Time >= 18:00`); `GetInfo()` — `"18:30, зал 3, 450 руб."`.
+
+### Правила предметной области
+
+- `Title` фильма уникален. `Name` жанра уникален.
+- `Time` в CSV — `HH:mm`. `Price` ≥ 0.
+
+### Репозитории
+
+`GetGenres()`, `GetMovies()`, `GetSessions()`.
+
+### Методы программы
+
+**1. Поиск жанра фильма по названию.** Не найдено — `null`.
+
+**2. Первый сеанс фильма.** Передаётся объект фильма. Не найдено — `null`.
+
+**3. Суммарная длительность всех фильмов.** Пустой список — `0`.
+
+**4. Группировка фильмов по жанрам.** `Dictionary<string, List<Movie>>`. Если жанр не найден — `"Без жанра"`.
+
+**5. Вывод всех фильмов.** `<GetInfo()> — жанр "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindGenre("Интерстеллар"): Фантастика
+2. FindSession(movie "Интерстеллар"): 18:30, зал 3, 450 руб.
+3. GetTotalDuration: 520 минут
+4. GroupMoviesByGenre: Фантастика — 2, Драма — 1, Боевик — 1
+5. PrintAllMovies:
+"Интерстеллар (2014, 169 мин)" — жанр "Фантастика"
+"Начало (2010, 148 мин)" — жанр "Фантастика"
+"Зелёная миля (1999, 189 мин)" — жанр "Драма"
+"Форсаж (2001, 106 мин)" — жанр "Боевик"
 
-**Классы, свойства и методы:**
-
-**`Genre`**
-- Свойства: `Id`, `Name`
-- Вычисляемое свойство `Info` — название жанра
-
-**`Movie`**
-- Свойства: `Id`, `Title`, `GenreId`, `Duration`, `Year`
-- Вычисляемое свойство `IsLong` — `true`, если `Duration > 120`
-- Метод `GetInfo()` — `"Интерстеллар (2014, 169 мин)"`
-
-**`Session`**
-- Свойства: `Id`, `MovieId`, `Time`, `Hall`, `Price`
-- Вычисляемое свойство `IsEvening` — `true`, если `Time >= 18:00`
-- Метод `GetInfo()` — `"18:30, зал 3, 450 руб."`
-
-**Репозитории:** `GetGenres()`, `GetMovies()`, `GetSessions()`
-
-**Методы программы:**
-- `FindGenre(movies, genres, title)` — по названию фильма находит жанр.
-- `FindSession(sessions, movie)` — первый сеанс для фильма.
-- `GetTotalDuration(movies)` — суммарная длительность всех фильмов.
-- `GroupMoviesByGenre(movies, genres)` — `Dictionary<string, List<Movie>>`: фильмы, сгруппированные по жанрам.
-- `PrintAllMovies(movies, genres)` — вывод фильмов с жанром.
-
-**Вывод:**
-```
-Количество фильмов: 4, сеансов: 6
-Фильм "Интерстеллар" жанра "Фантастика", сеанс в 18:30
-Общая длительность: 520 минут
-Фантастика: Интерстеллар, Начало
-Драма: Зелёная миля
+Не найдено: FindGenre("Неизвестный фильм") → null
 ```
 
 ---
 
 ## Вариант 3. Университет
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    FACULTY ||--o{ GROUP   : "включает"
+    GROUP   ||--o{ STUDENT : "учится в"
+
+    FACULTY {
+        int    Id   PK
+        string Name
+        string Dean
+    }
+    GROUP {
+        int    Id        PK
+        string Name
+        int    FacultyId FK
+        int    Course
+    }
+    STUDENT {
+        int     Id          PK
+        string  FullName
+        int     GroupId     FK
+        int     Age
+        decimal Scholarship
+    }
 ```
-Faculty (1) ────< Group >──── (1) Student
-  Id               Id              Id
-  Name             Name            FullName
-  Dean             FacultyId       GroupId
-                   Course          Age
-                                   Scholarship
+
+### Классы
+
+**`Faculty`** — `Id`, `Name`, `Dean`; `Info` — `"Информатики (декан: Иванов И.И.)"`.
+
+**`Group`** — `Id`, `Name`, `FacultyId`, `Course`; `IsSenior` (`Course >= 4`); `GetInfo()` — `"ИС-21 (2 курс)"`.
+
+**`Student`** — `Id`, `FullName`, `GroupId`, `Age`, `Scholarship`; `HasScholarship` (`Scholarship > 0`); `GetInfo()` — `"Иванов И.И. (20 лет, стипендия 8000)"`.
+
+### Правила предметной области
+
+- `Name` группы и факультета уникальны.
+- `FullName` студента **не уникально**. `Course` — 1–6. `Scholarship` ≥ 0.
+
+### Репозитории
+
+`GetFaculties()`, `GetGroups()`, `GetStudents()`.
+
+### Методы программы
+
+**1. Поиск группы студента по имени.** Не найдено — `null`.
+
+**2. Поиск факультета группы.** Не найдено — `null`.
+
+**3. Суммарная стипендия.** Пустой список — `0`.
+
+**4. Студенты со стипендией выше порога.** Новый список, отсортированный по убыванию стипендии — **вручную, пузырьковой сортировкой**.
+
+**5. Вывод всех студентов.** `<GetInfo()> — группа <GetInfo()>, факультет "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindGroup("Иванов И.И."): ИС-21 (2 курс)
+2. FindFaculty(group "ИС-21"): Информатики (декан: Иванов И.И.)
+3. GetTotalScholarship: 45000 руб.
+4. GetStudentsWithHighScholarship(5000): Петров (8000), Иванов (6500)
+5. PrintAllStudents:
+"Иванов И.И. (20 лет, стипендия 8000)" — группа "ИС-21 (2 курс)", факультет "Информатики"
+"Петров П.П. (21 год, стипендия 6500)" — группа "ИС-21 (2 курс)", факультет "Информатики"
+"Сидоров С.С. (19 лет, стипендия 0)" — группа "ИС-22 (1 курс)", факультет "Информатики"
 
-**Классы, свойства и методы:**
-
-**`Faculty`**
-- Свойства: `Id`, `Name`, `Dean`
-- Вычисляемое свойство `Info` — `"Информатики (декан: Иванов И.И.)"`
-
-**`Group`**
-- Свойства: `Id`, `Name`, `FacultyId`, `Course`
-- Вычисляемое свойство `IsSenior` — `true`, если `Course >= 4`
-- Метод `GetInfo()` — `"ИС-21 (2 курс)"`
-
-**`Student`**
-- Свойства: `Id`, `FullName`, `GroupId`, `Age`, `Scholarship`
-- Вычисляемое свойство `HasScholarship` — `true`, если `Scholarship > 0`
-- Метод `GetInfo()` — `"Иванов И.И. (20 лет, стипендия 8000)"`
-
-**Репозитории:** `GetFaculties()`, `GetGroups()`, `GetStudents()`
-
-**Методы программы:**
-- `FindGroup(students, groups, name)` — группа студента по имени.
-- `FindFaculty(faculties, group)` — факультет группы.
-- `GetTotalScholarship(students)` — суммарная стипендия.
-- `GetStudentsWithHighScholarship(students, min)` — `List<Student>` со стипендией выше порога, отсортированный по убыванию (пузырьковая сортировка).
-- `PrintAllStudents(students, groups, faculties)` — вывод студентов с группой и факультетом.
-
-**Вывод:**
-```
-Количество студентов: 10, групп: 4
-Студент Иванов И.И. учится в группе ИС-21 факультета Информатики
-Общая стипендия: 45000 руб.
-Студенты со стипендией > 5000: Иванов (8000), Петров (6500)
+Не найдено: FindGroup("Неизвестный студент") → null
 ```
 
 ---
 
 ## Вариант 4. Больница
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    DEPARTMENT ||--o{ DOCTOR  : "работает в"
+    DOCTOR     ||--o{ PATIENT : "лечит"
+
+    DEPARTMENT {
+        int    Id   PK
+        string Name
+        string Head
+    }
+    DOCTOR {
+        int    Id           PK
+        string FullName
+        int    DepartmentId FK
+        string Specialty
+    }
+    PATIENT {
+        int    Id        PK
+        string FullName
+        int    DoctorId  FK
+        string Diagnosis
+        int    Age
+    }
 ```
-Department (1) ────< Doctor >──── (1) Patient
-  Id                  Id              Id
-  Name                FullName        FullName
-  Head                DepartmentId    DoctorId
-                      Specialty       Diagnosis
-                                      Age
+
+### Классы
+
+**`Department`** — `Id`, `Name`, `Head`; `Info` — `"Терапия (зав.: Сидоров С.С.)"`.
+
+**`Doctor`** — `Id`, `FullName`, `DepartmentId`, `Specialty`; `IsSurgeon` (`Specialty == "Хирург"`); `GetInfo()` — `"Сидоров С.С. (терапевт)"`.
+
+**`Patient`** — `Id`, `FullName`, `DoctorId`, `Diagnosis`, `Age`; `IsElderly` (`Age > 60`); `GetInfo()` — `"Петров П.П. (58 лет, грипп)"`.
+
+### Правила предметной области
+
+- `Name` отделения уникально.
+- `FullName` пациента **не уникально**. `Age` — 0–150.
+
+### Репозитории
+
+`GetDepartments()`, `GetDoctors()`, `GetPatients()`.
+
+### Методы программы
+
+**1. Поиск врача пациента.** Не найдено — `null`.
+
+**2. Поиск отделения врача.** Не найдено — `null`.
+
+**3. Средний возраст пациентов.** Пустой список — `0` (защита от деления на ноль).
+
+**4. Количество пациентов по диагнозам.** `Dictionary<string, int>`.
+
+**5. Вывод всех пациентов.** `<GetInfo()> — врач <GetInfo()>, отделение "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindDoctor("Петров П.П."): Сидоров С.С. (терапевт)
+2. FindDepartment(doctor "Сидоров С.С."): Терапия (зав.: Сидоров С.С.)
+3. GetAverageAge: 47 лет
+4. CountPatientsByDiagnosis: Грипп — 3, Ангина — 2, Бронхит — 1
+5. PrintAllPatients:
+"Петров П.П. (58 лет, грипп)" — врач Сидоров С.С. (терапевт), отделение "Терапия"
+"Иванов И.И. (34 года, ангина)" — врач Сидоров С.С. (терапевт), отделение "Терапия"
+"Смирнов А.А. (72 года, бронхит)" — врач Орлов О.О. (хирург), отделение "Хирургия"
 
-**Классы, свойства и методы:**
-
-**`Department`**
-- Свойства: `Id`, `Name`, `Head`
-- Вычисляемое свойство `Info` — `"Терапия (зав.: Сидоров С.С.)"`
-
-**`Doctor`**
-- Свойства: `Id`, `FullName`, `DepartmentId`, `Specialty`
-- Вычисляемое свойство `IsSurgeon` — `true`, если `Specialty == "Хирург"`
-- Метод `GetInfo()` — `"Сидоров С.С. (терапевт)"`
-
-**`Patient`**
-- Свойства: `Id`, `FullName`, `DoctorId`, `Diagnosis`, `Age`
-- Вычисляемое свойство `IsElderly` — `true`, если `Age > 60`
-- Метод `GetInfo()` — `"Петров П.П. (58 лет, грипп)"`
-
-**Репозитории:** `GetDepartments()`, `GetDoctors()`, `GetPatients()`
-
-**Методы программы:**
-- `FindDoctor(patients, doctors, name)` — врач пациента.
-- `FindDepartment(departments, doctor)` — отделение врача.
-- `GetAverageAge(patients)` — средний возраст (проверка деления на 0).
-- `CountPatientsByDiagnosis(patients)` — `Dictionary<string, int>`: количество пациентов по диагнозам.
-- `PrintAllPatients(patients, doctors, departments)` — вывод пациентов с врачом и отделением.
-
-**Вывод:**
-```
-Количество пациентов: 8, врачей: 5
-Пациент Петров П.П. у врача Сидорова С.С. (терапевт), отделение Терапии
-Средний возраст: 47 лет
-Диагнозы: Грипп — 3, Ангина — 2, Бронхит — 1
+Не найдено: FindDoctor("Неизвестный пациент") → null
 ```
 
 ---
 
 ## Вариант 5. Магазин
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    SUPPLIER ||--o{ PRODUCT : "поставляет"
+    CATEGORY ||--o{ PRODUCT : "относится к"
+
+    SUPPLIER {
+        int    Id      PK
+        string Name
+        string Country
+    }
+    CATEGORY {
+        int    Id          PK
+        string Name
+        string Description
+    }
+    PRODUCT {
+        int     Id         PK
+        string  Name
+        decimal Price
+        int     SupplierId FK
+        int     CategoryId FK
+        int     Quantity
+    }
 ```
-Supplier (1) ────< Product >──── (1) Category
-  Id                Id               Id
-  Name              Name             Name
-  Country           Price            Description
-                    SupplierId
-                    CategoryId
-                    Quantity
+
+### Классы
+
+**`Supplier`** — `Id`, `Name`, `Country`; `IsForeign` (`Country != "Россия"`); `GetInfo()` — `"Samsung (Южная Корея)"`.
+
+**`Category`** — `Id`, `Name`, `Description`; `Info` — `"Электроника — бытовая техника"`.
+
+**`Product`** — `Id`, `Name`, `Price`, `SupplierId`, `CategoryId`, `Quantity`; `TotalPrice`; `IsExpensive` (`Price > 10000`); `GetInfo()` — `"Ноутбук (75000 руб., 10 шт.)"`.
+
+### Правила предметной области
+
+- `Name` категории и поставщика уникальны.
+- `Name` товара **не уникально**. `Price`, `Quantity` ≥ 0.
+
+### Репозитории
+
+`GetSuppliers()`, `GetCategories()`, `GetProducts()`.
+
+### Методы программы
+
+**1. Поиск категории товара.** Не найдено — `null`.
+
+**2. Поиск поставщика товара.** Не найдено — `null`.
+
+**3. Общая стоимость товаров на складе.** Сумма `Price * Quantity`. Пустой список — `0`.
+
+**4. Самый дорогой товар в каждой категории.** `Dictionary<string, Product>` — только для категорий, где есть товары.
+
+**5. Вывод всех товаров.** `<GetInfo()> — категория "<Name>", поставщик <Name>`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindCategory("Ноутбук"): Электроника — бытовая техника
+2. FindSupplier(product "Ноутбук"): Samsung (Южная Корея)
+3. GetTotalPrice: 1250000 руб.
+4. GetMostExpensiveProductPerCategory: Электроника — Ноутбук (75000), Одежда — Куртка (12000)
+5. PrintAllProducts:
+"Ноутбук (75000 руб., 10 шт.)" — категория "Электроника", поставщик "Samsung"
+"Куртка (12000 руб., 5 шт.)" — категория "Одежда", поставщик "Adidas"
+"Телевизор (45000 руб., 3 шт.)" — категория "Электроника", поставщик "LG"
 
-**Классы, свойства и методы:**
-
-**`Supplier`**
-- Свойства: `Id`, `Name`, `Country`
-- Вычисляемое свойство `IsForeign` — `true`, если `Country != "Россия"`
-- Метод `GetInfo()` — `"Samsung (Южная Корея)"`
-
-**`Category`**
-- Свойства: `Id`, `Name`, `Description`
-- Вычисляемое свойство `Info` — `"Электроника — бытовая техника"`
-
-**`Product`**
-- Свойства: `Id`, `Name`, `Price`, `SupplierId`, `CategoryId`, `Quantity`
-- Вычисляемое свойство `TotalPrice` — `Price * Quantity`
-- Вычисляемое свойство `IsExpensive` — `true`, если `Price > 10000`
-- Метод `GetInfo()` — `"Ноутбук (75000 руб., 10 шт.)"`
-
-**Репозитории:** `GetSuppliers()`, `GetCategories()`, `GetProducts()`
-
-**Методы программы:**
-- `FindCategory(products, categories, name)` — категория товара по названию.
-- `FindSupplier(suppliers, product)` — поставщик товара.
-- `GetTotalPrice(products)` — суммарная стоимость (`Price * Quantity` по всем товарам).
-- `GetMostExpensiveProductPerCategory(products, categories)` — `Dictionary<string, Product>`: самый дорогой товар в каждой категории.
-- `PrintAllProducts(products, categories, suppliers)` — вывод товаров с категорией и поставщиком.
-
-**Вывод:**
-```
-Количество товаров: 7, категорий: 3
-Товар "Ноутбук" категории "Электроника" от "Samsung"
-Общая стоимость: 1250000 руб.
-Электроника: Ноутбук (75000), Одежда: Куртка (12000)
+Не найдено: FindCategory("Неизвестный товар") → null
 ```
 
 ---
 
 ## Вариант 6. Автопарк
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    ROUTE ||--o{ CAR    : "обслуживает"
+    CAR   ||--o{ DRIVER : "закреплён за"
+
+    ROUTE {
+        int    Id       PK
+        string Name
+        int    Distance
+    }
+    CAR {
+        int    Id      PK
+        string Model
+        int    RouteId FK
+        int    Year
+        string Number
+    }
+    DRIVER {
+        int    Id         PK
+        string FullName
+        int    CarId      FK
+        int    Experience
+        string License
+    }
 ```
-Route (1) ────< Car >──── (1) Driver
-  Id             Id            Id
-  Name           Model         FullName
-  Distance       RouteId       CarId
-                 Year          Experience
-                 Number        License
+
+### Классы
+
+**`Route`** — `Id`, `Name`, `Distance`; `IsLong` (`Distance > 50`); `GetInfo()` — `"Городской (25 км)"`.
+
+**`Car`** — `Id`, `Model`, `RouteId`, `Year`, `Number`; `IsNew` (`Year >= 2020`); `GetInfo()` — `"Toyota Camry (2021, А123БВ)"`.
+
+**`Driver`** — `Id`, `FullName`, `CarId`, `Experience`, `License`; `IsExperienced` (`Experience > 5`); `GetInfo()` — `"Иванов И.И. (10 лет стажа)"`.
+
+### Правила предметной области
+
+- `Number` машины уникален. `Name` маршрута уникально.
+- `FullName` водителя **не уникально**. `Distance` ≥ 0. `Year` — 1900–2100.
+
+### Репозитории
+
+`GetRoutes()`, `GetCars()`, `GetDrivers()`.
+
+### Методы программы
+
+**1. Поиск водителя по номеру машины.** Не найдено — `null`.
+
+**2. Поиск маршрута машины.** Не найдено — `null`.
+
+**3. Суммарная протяжённость маршрутов.** Пустой список — `0`.
+
+**4. Водители с более чем одной машиной.** Сравнивать по `FullName`.
+
+**5. Вывод всех машин.** `<GetInfo()> — водитель <GetInfo()>, маршрут "<Name>" (<Distance> км)`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindDriver("А123БВ"): Иванов И.И. (10 лет стажа)
+2. FindRoute(car "Toyota Camry"): Городской (25 км)
+3. GetTotalDistance: 180 км
+4. GetDriversWithMultipleCars: Иванов (2), Петров (3)
+5. PrintAllCars:
+"Toyota Camry (2021, А123БВ)" — водитель Иванов И.И. (10 лет стажа), маршрут "Городской" (25 км)
+"Kia Rio (2019, Б456ВГ)" — водитель Петров П.П. (3 года стажа), маршрут "Загородный" (75 км)
+"Ford Focus (2022, В789ГД)" — водитель Сидоров С.С. (8 лет стажа), маршрут "Городской" (25 км)
 
-**Классы, свойства и методы:**
-
-**`Route`**
-- Свойства: `Id`, `Name`, `Distance`
-- Вычисляемое свойство `IsLong` — `true`, если `Distance > 50`
-- Метод `GetInfo()` — `"Городской (25 км)"`
-
-**`Car`**
-- Свойства: `Id`, `Model`, `RouteId`, `Year`, `Number`
-- Вычисляемое свойство `IsNew` — `true`, если `Year >= 2020`
-- Метод `GetInfo()` — `"Toyota Camry (2021, А123БВ)"`
-
-**`Driver`**
-- Свойства: `Id`, `FullName`, `CarId`, `Experience`, `License`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 5`
-- Метод `GetInfo()` — `"Иванов И.И. (10 лет стажа)"`
-
-**Репозитории:** `GetRoutes()`, `GetCars()`, `GetDrivers()`
-
-**Методы программы:**
-- `FindDriver(cars, drivers, number)` — водитель по номеру машины.
-- `FindRoute(routes, car)` — маршрут машины.
-- `GetTotalDistance(routes)` — суммарное расстояние всех маршрутов.
-- `GetDriversWithMultipleCars(cars, drivers)` — `List<Driver>`, у которых больше одной машины.
-- `PrintAllCars(cars, drivers, routes)` — вывод машин с водителем и маршрутом.
-
-**Вывод:**
-```
-Количество машин: 6, водителей: 5
-Машина А123БВ у водителя Иванова И.И., маршрут "Городской" (25 км)
-Общая протяжённость: 180 км
-Водители с 2+ машинами: Иванов (2), Петров (3)
+Не найдено: FindDriver("Х000ХХ") → null
 ```
 
 ---
 
 ## Вариант 7. Ресторан
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    CHEF     ||--o{ DISH : "готовит"
+    CATEGORY ||--o{ DISH : "относится к"
+
+    CHEF {
+        int    Id        PK
+        string FullName
+        string Specialty
+    }
+    CATEGORY {
+        int    Id   PK
+        string Name
+        string Type
+    }
+    DISH {
+        int     Id         PK
+        string  Name
+        int     ChefId     FK
+        int     CategoryId FK
+        decimal Price
+        int     Weight
+    }
 ```
-Chef (1) ────< Dish >──── (1) Category
-  Id            Id            Id
-  FullName      Name          Name
-  Specialty     ChefId        Type
-                CategoryId    Description
-                Price
-                Weight
+
+### Классы
+
+**`Chef`** — `Id`, `FullName`, `Specialty`; `IsChef` (`Specialty == "Шеф-повар"`); `GetInfo()` — `"Петрова А.А. (шеф-повар)"`.
+
+**`Category`** — `Id`, `Name`, `Type`; `Info` — `"Супы — горячие блюда"`.
+
+**`Dish`** — `Id`, `Name`, `ChefId`, `CategoryId`, `Price`, `Weight`; `PricePerGram`; `IsHeavy` (`Weight > 500`); `GetInfo()` — `"Борщ (350 руб., 400 г)"`.
+
+### Правила предметной области
+
+- `Name` категории уникально. `Weight` > 0.
+- `Name` блюда **не уникально**.
+
+### Репозитории
+
+`GetChefs()`, `GetCategories()`, `GetDishes()`.
+
+### Методы программы
+
+**1. Поиск повара блюда.** Не найдено — `null`.
+
+**2. Поиск категории блюда.** Не найдено — `null`.
+
+**3. Общий вес блюд.** Пустой список — `0`.
+
+**4. Блюда указанного повара по цене.** Сортировка по возрастанию — **вручную**.
+
+**5. Вывод всех блюд.** `<GetInfo()> — повар <FullName>, категория "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindChef("Борщ"): Петрова А.А. (шеф-повар)
+2. FindCategory(dish "Борщ"): Супы — горячие блюда
+3. GetTotalWeight: 3200 г
+4. GetDishesByChefSortedByPrice("Петрова А.А."): Окрошка (250), Борщ (350), Солянка (400)
+5. PrintAllDishes:
+"Борщ (350 руб., 400 г)" — повар Петрова А.А., категория "Супы"
+"Окрошка (250 руб., 300 г)" — повар Петрова А.А., категория "Супы"
+"Солянка (400 руб., 350 г)" — повар Петрова А.А., категория "Супы"
 
-**Классы, свойства и методы:**
-
-**`Chef`**
-- Свойства: `Id`, `FullName`, `Specialty`
-- Вычисляемое свойство `IsChef` — `true`, если `Specialty == "Шеф-повар"`
-- Метод `GetInfo()` — `"Петрова А.А. (шеф-повар)"`
-
-**`Category`**
-- Свойства: `Id`, `Name`, `Type`
-- Вычисляемое свойство `Info` — `"Супы — горячие блюда"`
-
-**`Dish`**
-- Свойства: `Id`, `Name`, `ChefId`, `CategoryId`, `Price`, `Weight`
-- Вычисляемое свойство `PricePerGram` — `Price / Weight`
-- Вычисляемое свойство `IsHeavy` — `true`, если `Weight > 500`
-- Метод `GetInfo()` — `"Борщ (350 руб., 400 г)"`
-
-**Репозитории:** `GetChefs()`, `GetCategories()`, `GetDishes()`
-
-**Методы программы:**
-- `FindChef(dishes, chefs, name)` — повар, готовящий блюдо.
-- `FindCategory(categories, dish)` — категория блюда.
-- `GetTotalWeight(dishes)` — общий вес всех блюд.
-- `GetDishesByChefSortedByPrice(dishes, chefs, chefName)` — `List<Dish>` указанного повара, отсортированный по цене.
-- `PrintAllDishes(dishes, chefs, categories)` — вывод блюд с поваром и категорией.
-
-**Вывод:**
-```
-Количество блюд: 9, поваров: 4
-Блюдо "Борщ" готовит Петрова А.А., категория "Супы"
-Общий вес: 3200 г
-Блюда Петровой по цене: Борщ (350), Солянка (400), Окрошка (250)
+Не найдено: FindChef("Неизвестное блюдо") → null
 ```
 
 ---
 
 ## Вариант 8. Аэропорт
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    AIRLINE ||--o{ PLANE  : "имеет"
+    PLANE   ||--o{ FLIGHT : "выполняет"
+
+    AIRLINE {
+        int    Id      PK
+        string Name
+        string Country
+    }
+    PLANE {
+        int    Id        PK
+        string Model
+        int    AirlineId FK
+        int    Capacity
+    }
+    FLIGHT {
+        int      Id          PK
+        int      PlaneId     FK
+        string   Destination
+        TimeSpan Departure
+        decimal  Price
+    }
 ```
-Airline (1) ────< Plane >──── (1) Flight
-  Id              Id              Id
-  Name            Model           PlaneId
-  Country         AirlineId       Destination
-                  Capacity        Departure
-                                  Price
+
+### Классы
+
+**`Airline`** — `Id`, `Name`, `Country`; `IsInternational` (`Country != "Россия"`); `GetInfo()` — `"Аэрофлот (Россия)"`.
+
+**`Plane`** — `Id`, `Model`, `AirlineId`, `Capacity`; `IsBig` (`Capacity > 200`); `GetInfo()` — `"Boeing 737 (180 мест)"`.
+
+**`Flight`** — `Id`, `PlaneId`, `Destination`, `Departure`, `Price`; `IsMorning` (`Departure < 12:00`); `GetInfo()` — `"Москва, 08:30, 5500 руб."`.
+
+### Правила предметной области
+
+- `Name` авиакомпании уникально. `Model` самолёта **не уникальна**.
+- `Destination` **не уникально**. `Departure` в CSV — `HH:mm`.
+
+### Репозитории
+
+`GetAirlines()`, `GetPlanes()`, `GetFlights()`.
+
+### Методы программы
+
+**1. Поиск самолёта по направлению.** Не найдено — `null`.
+
+**2. Поиск авиакомпании самолёта.** Не найдено — `null`.
+
+**3. Суммарная вместимость самолётов.** Пустой список — `0`.
+
+**4. Самая загруженная авиакомпания.** По числу рейсов. При равенстве — первая.
+
+**5. Вывод всех рейсов.** `<GetInfo()> — <Plane.Model>, авиакомпания "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindPlane("Москва"): Boeing 737 (180 мест)
+2. FindAirline(plane "Boeing 737"): Аэрофлот (Россия)
+3. GetTotalCapacity: 1200 пассажиров
+4. GetBusiestAirline: Аэрофлот (4 рейса)
+5. PrintAllFlights:
+"Москва, 08:30, 5500 руб." — Boeing 737, авиакомпания "Аэрофлот"
+"Санкт-Петербург, 14:15, 4200 руб." — Airbus A320, авиакомпания "Аэрофлот"
+"Казань, 20:00, 3800 руб." — Boeing 737, авиакомпания "S7"
 
-**Классы, свойства и методы:**
-
-**`Airline`**
-- Свойства: `Id`, `Name`, `Country`
-- Вычисляемое свойство `IsInternational` — `true`, если `Country != "Россия"`
-- Метод `GetInfo()` — `"Аэрофлот (Россия)"`
-
-**`Plane`**
-- Свойства: `Id`, `Model`, `AirlineId`, `Capacity`
-- Вычисляемое свойство `IsBig` — `true`, если `Capacity > 200`
-- Метод `GetInfo()` — `"Boeing 737 (180 мест)"`
-
-**`Flight`**
-- Свойства: `Id`, `PlaneId`, `Destination`, `Departure`, `Price`
-- Вычисляемое свойство `IsMorning` — `true`, если `Departure < 12:00`
-- Метод `GetInfo()` — `"Москва, 08:30, 5500 руб."`
-
-**Репозитории:** `GetAirlines()`, `GetPlanes()`, `GetFlights()`
-
-**Методы программы:**
-- `FindPlane(flights, planes, destination)` — самолёт по направлению.
-- `FindAirline(airlines, plane)` — авиакомпания самолёта.
-- `GetTotalCapacity(planes)` — суммарная вместимость всех самолётов.
-- `GetBusiestAirline(flights, planes, airlines)` — авиакомпания с наибольшим числом рейсов.
-- `PrintAllFlights(flights, planes, airlines)` — вывод рейсов с самолётом и авиакомпанией.
-
-**Вывод:**
-```
-Количество рейсов: 8, самолётов: 5
-Рейс в "Москва" — Boeing 737, авиакомпания "Аэрофлот"
-Общая вместимость: 1200 пассажиров
-Самая загруженная авиакомпания: Аэрофлот (4 рейса)
+Не найдено: FindPlane("Неизвестное направление") → null
 ```
 
 ---
 
 ## Вариант 9. Музей
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    CURATOR ||--o{ EXHIBIT : "курирует"
+    HALL    ||--o{ EXHIBIT : "содержит"
+
+    CURATOR {
+        int    Id        PK
+        string FullName
+        string Specialty
+    }
+    HALL {
+        int    Id    PK
+        string Name
+        int    Floor
+        int    Area
+    }
+    EXHIBIT {
+        int     Id        PK
+        string  Name
+        int     CuratorId FK
+        int     HallId    FK
+        int     Year
+        decimal Price
+    }
 ```
-Curator (1) ────< Exhibit >──── (1) Hall
-  Id              Id               Id
-  FullName        Name             Name
-  Specialty       CuratorId        Floor
-                  HallId           Area
-                  Year
-                  Price
+
+### Классы
+
+**`Curator`** — `Id`, `FullName`, `Specialty`; `IsRestorer` (`Specialty == "Реставратор"`); `GetInfo()` — `"Смирнова Е.В. (реставратор)"`.
+
+**`Hall`** — `Id`, `Name`, `Floor`, `Area`; `IsUpper` (`Floor > 1`); `GetInfo()` — `"Античность (2 этаж, 200 м²)"`.
+
+**`Exhibit`** — `Id`, `Name`, `CuratorId`, `HallId`, `Year`, `Price`; `IsAncient` (`Year < 1000`); `IsValuable` (`Price > 1000000`); `GetInfo()` — `"Амфора (500 до н.э., 50000 руб.)"`.
+
+### Правила предметной области
+
+- `Name` зала уникально. `Name` экспоната **не уникально**.
+- `Year` может быть отрицательным. `Price` ≥ 0.
+
+### Репозитории
+
+`GetCurators()`, `GetHalls()`, `GetExhibits()`.
+
+### Методы программы
+
+**1. Поиск куратора экспоната.** Не найдено — `null`.
+
+**2. Поиск зала экспоната.** Не найдено — `null`.
+
+**3. Общая стоимость экспонатов.** Пустой список — `0`.
+
+**4. Экспонаты зала по году.** Сортировка по возрастанию — **вручную**.
+
+**5. Вывод всех экспонатов.** `<GetInfo()> — куратор <FullName>, зал "<Name>" (<Floor> этаж)`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindCurator("Амфора"): Смирнова Е.В. (реставратор)
+2. FindHall(exhibit "Амфора"): Античность (2 этаж, 200 м²)
+3. GetTotalPrice: 8500000 руб.
+4. GetExhibitsByHallSortedByYear("Античность"): Амфора (-500), Статуя (-200)
+5. PrintAllExhibits:
+"Амфора (500 до н.э., 50000 руб.)" — куратор Смирнова Е.В., зал "Античность" (2 этаж)
+"Статуя (200 до н.э., 80000 руб.)" — куратор Смирнова Е.В., зал "Античность" (2 этаж)
+"Икона (1500, 200000 руб.)" — куратор Орлова М.И., зал "Средневековье" (1 этаж)
 
-**Классы, свойства и методы:**
-
-**`Curator`**
-- Свойства: `Id`, `FullName`, `Specialty`
-- Вычисляемое свойство `IsRestorer` — `true`, если `Specialty == "Реставратор"`
-- Метод `GetInfo()` — `"Смирнова Е.В. (реставратор)"`
-
-**`Hall`**
-- Свойства: `Id`, `Name`, `Floor`, `Area`
-- Вычисляемое свойство `IsUpper` — `true`, если `Floor > 1`
-- Метод `GetInfo()` — `"Античность (2 этаж, 200 м²)"`
-
-**`Exhibit`**
-- Свойства: `Id`, `Name`, `CuratorId`, `HallId`, `Year`, `Price`
-- Вычисляемое свойство `IsAncient` — `true`, если `Year < 1000`
-- Вычисляемое свойство `IsValuable` — `true`, если `Price > 1000000`
-- Метод `GetInfo()` — `"Амфора (500 до н.э., 50000 руб.)"`
-
-**Репозитории:** `GetCurators()`, `GetHalls()`, `GetExhibits()`
-
-**Методы программы:**
-- `FindCurator(exhibits, curators, name)` — куратор экспоната.
-- `FindHall(halls, exhibit)` — зал экспоната.
-- `GetTotalPrice(exhibits)` — общая стоимость экспонатов.
-- `GetExhibitsByHallSortedByYear(halls, exhibits, hallName)` — экспонаты зала, отсортированные по году.
-- `PrintAllExhibits(exhibits, curators, halls)` — вывод экспонатов с куратором и залом.
-
-**Вывод:**
-```
-Количество экспонатов: 10, залов: 4
-Экспонат "Древняя амфора" курирует Смирнова Е.В., зал "Античность" (2 этаж)
-Общая стоимость: 8500000 руб.
-Экспонаты зала Античность: Амфора (500 до н.э.), Статуя (200 до н.э.)
+Не найдено: FindCurator("Неизвестный экспонат") → null
 ```
 
 ---
 
 ## Вариант 10. Спортзал
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    TRAINER ||--o{ WORKOUT : "ведёт"
+    WORKOUT ||--o{ CLIENT  : "посещает"
+
+    TRAINER {
+        int    Id             PK
+        string FullName
+        string Specialization
+    }
+    WORKOUT {
+        int     Id        PK
+        string  Name
+        int     TrainerId FK
+        int     Duration
+        decimal Price
+    }
+    CLIENT {
+        int    Id        PK
+        string FullName
+        int    WorkoutId FK
+        int    Age
+        string Phone
+    }
 ```
-Trainer (1) ────< Workout >──── (1) Client
-  Id               Id              Id
-  FullName         Name            FullName
-  Specialization   TrainerId       WorkoutId
-                   Duration        Age
-                   Price           Phone
+
+### Классы
+
+**`Trainer`** — `Id`, `FullName`, `Specialization`; `IsYogaTrainer` (`Specialization == "Йога"`); `GetInfo()` — `"Орлова М.И. (йога)"`.
+
+**`Workout`** — `Id`, `Name`, `TrainerId`, `Duration`, `Price`; `PricePerMinute`; `IsLong` (`Duration > 60`); `GetInfo()` — `"Йога (60 мин, 800 руб.)"`.
+
+**`Client`** — `Id`, `FullName`, `WorkoutId`, `Age`, `Phone`; `IsYoung` (`Age < 25`); `GetInfo()` — `"Сергеева О.П. (22 года)"`.
+
+### Правила предметной области
+
+- `Name` тренировки **не уникально**. `Duration` > 0.
+- `FullName` тренера **не уникально**.
+
+### Репозитории
+
+`GetTrainers()`, `GetWorkouts()`, `GetClients()`.
+
+### Методы программы
+
+**1. Поиск тренера тренировки.** Не найдено — `null`.
+
+**2. Поиск клиента тренировки.** Не найдено — `null`.
+
+**3. Суммарная длительность.** Пустой список — `0`.
+
+**4. Загрузка тренеров.** `Dictionary<string, int>` — ФИО → суммарная длительность.
+
+**5. Вывод всех тренировок.** `<GetInfo()> — тренер <FullName>, клиент <FullName>`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindTrainer("Йога"): Орлова М.И. (йога)
+2. FindClient(workout "Йога"): Сергеева О.П. (22 года)
+3. GetTotalDuration: 360 минут
+4. GetTrainerWorkload: Орлова — 120 мин, Иванов — 150 мин, Петров — 90 мин
+5. PrintAllWorkouts:
+"Йога (60 мин, 800 руб.)" — тренер Орлова М.И., клиент Сергеева О.П.
+"Фитнес (60 мин, 700 руб.)" — тренер Иванов И.И., клиент Кузнецов Д.Д.
 
-**Классы, свойства и методы:**
-
-**`Trainer`**
-- Свойства: `Id`, `FullName`, `Specialization`
-- Вычисляемое свойство `IsYogaTrainer` — `true`, если `Specialization == "Йога"`
-- Метод `GetInfo()` — `"Орлова М.И. (йога)"`
-
-**`Workout`**
-- Свойства: `Id`, `Name`, `TrainerId`, `Duration`, `Price`
-- Вычисляемое свойство `PricePerMinute` — `Price / Duration`
-- Вычисляемое свойство `IsLong` — `true`, если `Duration > 60`
-- Метод `GetInfo()` — `"Йога (60 мин, 800 руб.)"`
-
-**`Client`**
-- Свойства: `Id`, `FullName`, `WorkoutId`, `Age`, `Phone`
-- Вычисляемое свойство `IsYoung` — `true`, если `Age < 25`
-- Метод `GetInfo()` — `"Сергеева О.П. (22 года)"`
-
-**Репозитории:** `GetTrainers()`, `GetWorkouts()`, `GetClients()`
-
-**Методы программы:**
-- `FindTrainer(workouts, trainers, name)` — тренер тренировки.
-- `FindClient(clients, workout)` — клиент тренировки.
-- `GetTotalDuration(workouts)` — суммарная длительность тренировок.
-- `GetTrainerWorkload(workouts, trainers)` — `Dictionary<string, int>`: суммарная длительность по тренерам.
-- `PrintAllWorkouts(workouts, trainers, clients)` — вывод тренировок.
-
-**Вывод:**
-```
-Количество тренировок: 6, тренеров: 3
-Тренировка "Йога" проводит Орлова М.И., клиент Сергеева О.П.
-Общая длительность: 360 минут
-Загрузка тренеров: Орлова — 120 мин, Иванов — 150 мин
+Не найдено: FindTrainer("Неизвестная тренировка") → null
 ```
 
 ---
 
 ## Вариант 11. Банк
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    BRANCH ||--o{ ACCOUNT : "обслуживает"
+    CLIENT ||--o{ ACCOUNT : "владеет"
+
+    BRANCH {
+        int    Id      PK
+        string Name
+        string Address
+    }
+    CLIENT {
+        int    Id       PK
+        string FullName
+        string Passport
+        string Phone
+    }
+    ACCOUNT {
+        int     Id       PK
+        string  Number
+        int     BranchId FK
+        int     ClientId FK
+        decimal Balance
+        string  Type
+    }
 ```
-Branch (1) ────< Account >──── (1) Client
-  Id              Id               Id
-  Name            Number           FullName
-  Address         BranchId         AccountId
-                  Balance          Passport
-                  Type             Phone
+
+### Классы
+
+**`Branch`** — `Id`, `Name`, `Address`; `IsCentral` (`Name == "Центральное"`); `GetInfo()` — `"Центральное (ул. Ленина, 1)"`.
+
+**`Client`** — `Id`, `FullName`, `Passport`, `Phone`; `GetInfo()` — `"Иванов И.И. (паспорт 1234 567890)"`.
+
+**`Account`** — `Id`, `Number`, `BranchId`, `ClientId`, `Balance`, `Type`; `IsVip` (`Balance > 1000000`); `GetBalanceInUsd(double rate)` (при `rate <= 0` — `0`); `GetInfo()` — `"40817810001 (дебетовый, 250000 руб.)"`.
+
+### Правила предметной области
+
+- `Number` счёта и `Passport` уникальны. `Name` отделения уникально.
+- `FullName` клиента **не уникально**.
+
+### Репозитории
+
+`GetBranches()`, `GetClients()`, `GetAccounts()`.
+
+### Методы программы
+
+**1. Поиск клиента по номеру счёта.** Не найдено — `null`.
+
+**2. Поиск отделения счёта.** Не найдено — `null`.
+
+**3. Общий баланс.** Пустой список — `0`.
+
+**4. Клиенты с более чем одним счётом.** Список клиентов, упорядоченный по `Id`.
+
+**5. Вывод всех счетов.** `<GetInfo()> — клиент <FullName>, отделение "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindClient("40817810001"): Иванов И.И. (паспорт 1234 567890)
+2. FindBranch(account "40817810001"): Центральное (ул. Ленина, 1)
+3. GetTotalBalance: 1250000 руб.
+4. GetClientsWithMultipleAccounts: Иванов (2), Петров (3)
+5. PrintAllAccounts:
+"40817810001 (дебетовый, 250000 руб.)" — клиент Иванов И.И., отделение "Центральное"
+"40817810002 (кредитный, 100000 руб.)" — клиент Иванов И.И., отделение "Северное"
 
-**Классы, свойства и методы:**
-
-**`Branch`**
-- Свойства: `Id`, `Name`, `Address`
-- Вычисляемое свойство `IsCentral` — `true`, если `Name == "Центральное"`
-- Метод `GetInfo()` — `"Центральное (ул. Ленина, 1)"`
-
-**`Client`**
-- Свойства: `Id`, `FullName`, `AccountId`, `Passport`, `Phone`
-- Метод `GetInfo()` — `"Иванов И.И. (паспорт 1234 567890)"`
-
-**`Account`**
-- Свойства: `Id`, `Number`, `BranchId`, `Balance`, `Type`
-- Вычисляемое свойство `IsVip` — `true`, если `Balance > 1000000`
-- Метод `GetBalanceInUsd(double rate)` — баланс в долларах по курсу
-- Метод `GetInfo()` — `"40817810001 (дебетовый, 250000 руб.)"`
-
-**Репозитории:** `GetBranches()`, `GetClients()`, `GetAccounts()`
-
-**Методы программы:**
-- `FindClient(accounts, clients, number)` — клиент по номеру счёта.
-- `FindBranch(branches, account)` — отделение счёта.
-- `GetTotalBalance(accounts)` — суммарный баланс.
-- `GetClientsWithMultipleAccounts(accounts, clients)` — клиенты с более чем одним счётом.
-- `PrintAllAccounts(accounts, clients, branches)` — вывод счетов с клиентом и отделением.
-
-**Вывод:**
-```
-Количество счетов: 7, клиентов: 5
-Счёт 40817810001 у Иванова И.И., отделение "Центральное"
-Общий баланс: 1250000 руб.
-Клиенты с 2+ счетами: Иванов (2), Петров (3)
+Не найдено: FindClient("00000000000") → null
 ```
 
 ---
 
 ## Вариант 12. Онлайн-курсы
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    TEACHER ||--o{ COURSE  : "ведёт"
+    COURSE  ||--o{ STUDENT : "проходит"
+
+    TEACHER {
+        int    Id       PK
+        string FullName
+        string Subject
+    }
+    COURSE {
+        int     Id        PK
+        string  Title
+        int     TeacherId FK
+        int     Duration
+        decimal Price
+    }
+    STUDENT {
+        int    Id       PK
+        string FullName
+        int    CourseId FK
+        string Email
+        int    Progress
+    }
 ```
-Teacher (1) ────< Course >──── (1) Student
-  Id              Id              Id
-  FullName        Title           FullName
-  Subject         TeacherId       CourseId
-                  Duration        Email
-                  Price           Progress
+
+### Классы
+
+**`Teacher`** — `Id`, `FullName`, `Subject`; `GetInfo()` — `"Петров П.П. (программирование)"`.
+
+**`Course`** — `Id`, `Title`, `TeacherId`, `Duration`, `Price`; `PricePerHour`; `IsLong` (`Duration > 40`); `GetInfo()` — `"C# для начинающих (40 ч, 15000 руб.)"`.
+
+**`Student`** — `Id`, `FullName`, `CourseId`, `Email`, `Progress`; `IsExcellent` (`Progress >= 90`); `IsFailing` (`Progress < 50`); `GetInfo()` — `"Сидоров С.С. (прогресс 75%)"`.
+
+### Правила предметной области
+
+- `Title` курса уникален. `FullName` студента и преподавателя **не уникальны**. `Progress` — 0–100.
+
+### Репозитории
+
+`GetTeachers()`, `GetCourses()`, `GetStudents()`.
+
+### Методы программы
+
+**1. Поиск преподавателя курса.** Не найдено — `null`.
+
+**2. Поиск студента курса.** Не найдено — `null`.
+
+**3. Суммарная длительность курсов.** Пустой список — `0`.
+
+**4. Топ-N студентов по прогрессу.** Сортировка по убыванию — **вручную**. При `N <= 0` — пустой список.
+
+**5. Вывод всех курсов.** `<GetInfo()> — преподаватель <FullName>, студент <FullName> (<Progress>%)`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindTeacher("C# для начинающих"): Петров П.П. (программирование)
+2. FindStudent(course "C# для начинающих"): Сидоров С.С. (прогресс 75%)
+3. GetTotalDuration: 120 часов
+4. GetTopStudents(3): Иванов (95%), Петров (88%), Сидоров (75%)
+5. PrintAllCourses:
+"C# для начинающих (40 ч, 15000 руб.)" — преподаватель Петров П.П., студент Сидоров С.С. (75%)
 
-**Классы, свойства и методы:**
-
-**`Teacher`**
-- Свойства: `Id`, `FullName`, `Subject`
-- Метод `GetInfo()` — `"Петров П.П. (программирование)"`
-
-**`Course`**
-- Свойства: `Id`, `Title`, `TeacherId`, `Duration`, `Price`
-- Вычисляемое свойство `PricePerHour` — `Price / Duration`
-- Вычисляемое свойство `IsLong` — `true`, если `Duration > 40`
-- Метод `GetInfo()` — `"C# для начинающих (40 ч, 15000 руб.)"`
-
-**`Student`**
-- Свойства: `Id`, `FullName`, `CourseId`, `Email`, `Progress`
-- Вычисляемое свойство `IsExcellent` — `true`, если `Progress >= 90`
-- Вычисляемое свойство `IsFailing` — `true`, если `Progress < 50`
-- Метод `GetInfo()` — `"Сидоров С.С. (прогресс 75%)"`
-
-**Репозитории:** `GetTeachers()`, `GetCourses()`, `GetStudents()`
-
-**Методы программы:**
-- `FindTeacher(courses, teachers, title)` — преподаватель курса.
-- `FindStudent(students, course)` — студент курса.
-- `GetTotalDuration(courses)` — суммарная длительность курсов.
-- `GetTopStudents(students, topN)` — топ-N студентов по прогрессу.
-- `PrintAllCourses(courses, teachers, students)` — вывод курсов.
-
-**Вывод:**
-```
-Количество курсов: 5, преподавателей: 3
-Курс "C# для начинающих" ведёт Петров П.П., студент Сидоров С.С. (75%)
-Общая длительность: 120 часов
-Топ-3 студента: Иванов (95%), Петров (88%), Сидоров (75%)
+Не найдено: FindTeacher("Неизвестный курс") → null
 ```
 
 ---
 
 ## Вариант 13. Ферма
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    FARMER ||--o{ ANIMAL : "ухаживает"
+    PEN    ||--o{ ANIMAL : "содержит"
+
+    FARMER {
+        int    Id         PK
+        string FullName
+        int    Experience
+    }
+    PEN {
+        int    Id     PK
+        int    Number
+        int    Area
+        string Type
+    }
+    ANIMAL {
+        int    Id       PK
+        string Name
+        int    FarmerId FK
+        int    PenId    FK
+        int    Age
+        int    Weight
+    }
 ```
-Farmer (1) ────< Animal >──── (1) Pen
-  Id              Id              Id
-  FullName        Name            Number
-  Experience      FarmerId        PenId
-                  PenId           Area
-                  Age             Type
-                  Weight
+
+### Классы
+
+**`Farmer`** — `Id`, `FullName`, `Experience`; `IsExperienced` (`Experience > 5`); `GetInfo()` — `"Иванов И.И. (10 лет опыта)"`.
+
+**`Pen`** — `Id`, `Number`, `Area`, `Type`; `IsBig` (`Area > 100`); `GetInfo()` — `"Загон №3 (150 м², коровник)"`.
+
+**`Animal`** — `Id`, `Name`, `FarmerId`, `PenId`, `Age`, `Weight`; `IsAdult` (`Age > 2`); `IsHeavy` (`Weight > 500`); `GetInfo()` — `"Бурёнка (3 года, 600 кг)"`.
+
+### Правила предметной области
+
+- `Number` загона уникален. `Name` животного **не уникально**. `Age`, `Weight` ≥ 0.
+
+### Репозитории
+
+`GetFarmers()`, `GetPens()`, `GetAnimals()`.
+
+### Методы программы
+
+**1. Поиск фермера животного.** Не найдено — `null`.
+
+**2. Поиск загона животного.** Не найдено — `null`.
+
+**3. Общий вес животных.** Пустой список — `0`.
+
+**4. Самое тяжёлое животное в каждом загоне.** `Dictionary<string, Animal>` — ключ `"Загон №N"`.
+
+**5. Вывод всех животных.** `<GetInfo()> — фермер <FullName>, загон №<Number>`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindFarmer("Бурёнка"): Иванов И.И. (10 лет опыта)
+2. FindPen(animal "Бурёнка"): Загон №3 (150 м², коровник)
+3. GetTotalWeight: 4500 кг
+4. GetHeaviestAnimalPerPen: Загон 1 — Бык (800), Загон 2 — Корова (600), Загон 3 — Бурёнка (600)
+5. PrintAllAnimals:
+"Бурёнка (3 года, 600 кг)" — фермер Иванов И.И., загон №3
+"Бык (5 лет, 800 кг)" — фермер Иванов И.И., загон №1
 
-**Классы, свойства и методы:**
-
-**`Farmer`**
-- Свойства: `Id`, `FullName`, `Experience`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 5`
-- Метод `GetInfo()` — `"Иванов И.И. (10 лет опыта)"`
-
-**`Pen`**
-- Свойства: `Id`, `Number`, `Area`, `Type`
-- Вычисляемое свойство `IsBig` — `true`, если `Area > 100`
-- Метод `GetInfo()` — `"Загон №3 (150 м², коровник)"`
-
-**`Animal`**
-- Свойства: `Id`, `Name`, `FarmerId`, `PenId`, `Age`, `Weight`
-- Вычисляемое свойство `IsAdult` — `true`, если `Age > 2`
-- Вычисляемое свойство `IsHeavy` — `true`, если `Weight > 500`
-- Метод `GetInfo()` — `"Бурёнка (3 года, 600 кг)"`
-
-**Репозитории:** `GetFarmers()`, `GetPens()`, `GetAnimals()`
-
-**Методы программы:**
-- `FindFarmer(animals, farmers, name)` — фермер животного.
-- `FindPen(pens, animal)` — загон животного.
-- `GetTotalWeight(animals)` — общий вес.
-- `GetHeaviestAnimalPerPen(animals, pens)` — самое тяжёлое животное в каждом загоне.
-- `PrintAllAnimals(animals, farmers, pens)` — вывод животных.
-
-**Вывод:**
-```
-Количество животных: 12, фермеров: 3
-Животное "Бурёнка" у Иванова И.И., загон №3
-Общий вес: 4500 кг
-Самые тяжёлые в загонах: Загон 1 — Бык (800), Загон 2 — Корова (600)
+Не найдено: FindFarmer("Неизвестное животное") → null
 ```
 
 ---
 
 ## Вариант 14. IT-компания
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    PROJECT    ||--o{ EMPLOYEE : "включает"
+    DEPARTMENT ||--o{ EMPLOYEE : "включает"
+
+    PROJECT {
+        int      Id       PK
+        string   Name
+        decimal  Budget
+        DateTime Deadline
+    }
+    DEPARTMENT {
+        int    Id    PK
+        string Name
+        string Head
+        int    Floor
+    }
+    EMPLOYEE {
+        int     Id           PK
+        string  FullName
+        int     ProjectId    FK
+        int     DepartmentId FK
+        string  Position
+        decimal Salary
+    }
 ```
-Project (1) ────< Employee >──── (1) Department
-  Id               Id               Id
-  Name             FullName         Name
-  Budget           ProjectId        Head
-  Deadline         DepartmentId     Floor
-                   Position
-                   Salary
+
+### Классы
+
+**`Project`** — `Id`, `Name`, `Budget`, `Deadline`; `IsExpensive` (`Budget > 1000000`); `GetInfo()` — `"CRM-система (2 000 000 руб.)"`.
+
+**`Department`** — `Id`, `Name`, `Head`, `Floor`; `IsOnFloor(int floor)`; `GetInfo()` — `"Разработка (зав.: Петров П.П., 3 этаж)"`.
+
+**`Employee`** — `Id`, `FullName`, `ProjectId`, `DepartmentId`, `Position`, `Salary`; `IsSenior` (`Position == "Senior"`); `AnnualSalary` (`Salary * 12`); `GetInfo()` — `"Петров П.П. (Senior, 150000 руб.)"`.
+
+### Правила предметной области
+
+- `Name` проекта и отдела уникальны. `FullName` сотрудника **не уникально**. `Deadline` в CSV — `dd.MM.yyyy`.
+
+### Репозитории
+
+`GetProjects()`, `GetDepartments()`, `GetEmployees()`.
+
+### Методы программы
+
+**1. Поиск отдела сотрудника.** Не найдено — `null`.
+
+**2. Поиск проекта сотрудника.** Не найдено — `null`.
+
+**3. Фонд зарплат.** Пустой список — `0`.
+
+**4. Средняя зарплата по отделам.** `Dictionary<string, decimal>`, округлить до 2 знаков. Отделы без сотрудников не включать.
+
+**5. Вывод всех сотрудников.** `<GetInfo()> — отдел "<Name>", проект "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindDepartment("Петров П.П."): Разработка (зав.: Петров П.П., 3 этаж)
+2. FindProject(employee "Петров П.П."): CRM-система (2 000 000 руб.)
+3. GetTotalSalary: 2500000 руб.
+4. GetAverageSalaryByDepartment: Разработка — 150000, Тестирование — 90000
+5. PrintAllEmployees:
+"Петров П.П. (Senior, 150000 руб.)" — отдел "Разработка", проект "CRM-система"
+"Иванов И.И. (Junior, 60000 руб.)" — отдел "Разработка", проект "CRM-система"
 
-**Классы, свойства и методы:**
-
-**`Project`**
-- Свойства: `Id`, `Name`, `Budget`, `Deadline`
-- Вычисляемое свойство `IsExpensive` — `true`, если `Budget > 1000000`
-- Метод `GetInfo()` — `"CRM-система (2 000 000 руб.)"`
-
-**`Department`**
-- Свойства: `Id`, `Name`, `Head`, `Floor`
-- Метод `IsOnFloor(int floor)` — `true`, если отдел на указанном этаже
-- Метод `GetInfo()` — `"Разработка (зав.: Петров П.П., 3 этаж)"`
-
-**`Employee`**
-- Свойства: `Id`, `FullName`, `ProjectId`, `DepartmentId`, `Position`, `Salary`
-- Вычисляемое свойство `IsSenior` — `true`, если `Position == "Senior"`
-- Вычисляемое свойство `AnnualSalary` — `Salary * 12`
-- Метод `GetInfo()` — `"Петров П.П. (Senior, 150000 руб.)"`
-
-**Репозитории:** `GetProjects()`, `GetDepartments()`, `GetEmployees()`
-
-**Методы программы:**
-- `FindDepartment(employees, departments, name)` — отдел сотрудника.
-- `FindProject(projects, employee)` — проект сотрудника.
-- `GetTotalSalary(employees)` — фонд зарплат.
-- `GetAverageSalaryByDepartment(employees, departments)` — средняя зарплата по отделам.
-- `PrintAllEmployees(employees, departments, projects)` — вывод сотрудников.
-
-**Вывод:**
-```
-Количество сотрудников: 15, отделов: 4
-Петров П.П. в отделе "Разработка", проект "CRM-система"
-Общий фонд зарплат: 2500000 руб.
-Средняя зарплата: Разработка — 150000, Тестирование — 90000
+Не найдено: FindDepartment("Неизвестный сотрудник") → null
 ```
 
 ---
 
 ## Вариант 15. Гостиница
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    FLOOR ||--o{ ROOM  : "содержит"
+    ROOM  ||--o{ GUEST : "занимает"
+
+    FLOOR {
+        int    Id          PK
+        int    Number
+        string Description
+    }
+    ROOM {
+        int     Id       PK
+        string  Number
+        int     FloorId  FK
+        string  Type
+        decimal Price
+        int     Capacity
+    }
+    GUEST {
+        int      Id       PK
+        string   FullName
+        int      RoomId   FK
+        string   Passport
+        DateTime CheckIn
+        DateTime CheckOut
+    }
 ```
-Floor (1) ────< Room >──── (1) Guest
-  Id            Id            Id
-  Number        Number        FullName
-  Description   FloorId       RoomId
-                Type          Passport
-                Price         CheckIn
-                Capacity      CheckOut
+
+### Классы
+
+**`Floor`** — `Id`, `Number`, `Description`; `IsUpper` (`Number > 5`); `GetInfo()` — `"3 этаж (стандарт)"`.
+
+**`Room`** — `Id`, `Number`, `FloorId`, `Type`, `Price`, `Capacity`; `IsLux` (`Type == "Люкс"`); `GetTotalPrice(int days)` (при `days <= 0` — `0`); `GetInfo()` — `"305 (люкс, 5000 руб./сутки)"`.
+
+**`Guest`** — `Id`, `FullName`, `RoomId`, `Passport`, `CheckIn`, `CheckOut`; `StayDays` — количество дней проживания (`(CheckOut - CheckIn).Days`, минимум `0`); `GetInfo()` — `"Иванов И.И. (3 дня)"`.
+
+### Правила предметной области
+
+- `Number` комнаты уникален. `Passport` уникален. `FullName` гостя **не уникально**.
+- Даты в CSV — `dd.MM.yyyy`.
+
+### Репозитории
+
+`GetFloors()`, `GetRooms()`, `GetGuests()`.
+
+### Методы программы
+
+**1. Поиск гостя по номеру комнаты.** Не найдено — `null`.
+
+**2. Поиск этажа комнаты.** Не найдено — `null`.
+
+**3. Суммарная стоимость номеров в сутки.** Пустой список — `0`.
+
+**4. Количество гостей в каждом номере.** `Dictionary<string, int>` — только непустые.
+
+**5. Вывод всех номеров.** `<GetInfo()> — этаж <Number>, гостей: <count>`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindGuest("305"): Иванов И.И. (3 дня)
+2. FindFloor(room "305"): 3 этаж (стандарт)
+3. GetTotalPrice: 45000 руб./сутки
+4. GetRoomsWithGuests: 305 — 2, 401 — 1, 502 — 3
+5. PrintAllRooms:
+"305 (люкс, 5000 руб./сутки)" — этаж 3, гостей: 2
+"401 (стандарт, 3000 руб./сутки)" — этаж 4, гостей: 1
 
-**Классы, свойства и методы:**
-
-**`Floor`**
-- Свойства: `Id`, `Number`, `Description`
-- Вычисляемое свойство `IsUpper` — `true`, если `Number > 5`
-- Метод `GetInfo()` — `"3 этаж (стандарт)"`
-
-**`Room`**
-- Свойства: `Id`, `Number`, `FloorId`, `Type`, `Price`, `Capacity`
-- Вычисляемое свойство `IsLux` — `true`, если `Type == "Люкс"`
-- Метод `GetTotalPrice(int days)` — стоимость проживания за N дней
-- Метод `GetInfo()` — `"305 (люкс, 5000 руб./сутки)"`
-
-**`Guest`**
-- Свойства: `Id`, `FullName`, `RoomId`, `Passport`, `CheckIn`, `CheckOut`
-- Вычисляемое свойство `StayDays` — количество дней проживания
-- Метод `GetInfo()` — `"Иванов И.И. (3 дня)"`
-
-**Репозитории:** `GetFloors()`, `GetRooms()`, `GetGuests()`
-
-**Методы программы:**
-- `FindGuest(rooms, guests, number)` — гость по номеру комнаты.
-- `FindFloor(floors, room)` — этаж номера.
-- `GetTotalPrice(rooms)` — суммарная стоимость номеров.
-- `GetRoomsWithGuests(rooms, guests)` — `Dictionary<string, int>`: число гостей в каждом номере.
-- `PrintAllRooms(rooms, floors, guests)` — вывод номеров.
-
-**Вывод:**
-```
-Количество номеров: 10, постояльцев: 6
-Номер 305 занимает Иванов И.И., этаж 3
-Общая стоимость: 45000 руб./сутки
-Номера с гостями: 305 — 2, 401 — 1, 502 — 3
+Не найдено: FindGuest("999") → null
 ```
 
 ---
 
 ## Вариант 16. Парк аттракционов
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    ZONE     ||--o{ ATTRACTION : "содержит"
+    OPERATOR ||--o{ ATTRACTION : "обслуживает"
+
+    ZONE {
+        int    Id   PK
+        string Name
+        int    Area
+    }
+    OPERATOR {
+        int    Id         PK
+        string FullName
+        string Shift
+        int    Experience
+    }
+    ATTRACTION {
+        int     Id         PK
+        string  Name
+        int     ZoneId     FK
+        int     OperatorId FK
+        decimal Price
+        int     Capacity
+    }
 ```
-Zone (1) ────< Attraction >──── (1) Operator
-  Id            Id                 Id
-  Name          Name               FullName
-  Area          ZoneId             AttractionId
-                OperatorId         Shift
-                Price              Experience
-                Capacity
+
+### Классы
+
+**`Zone`** — `Id`, `Name`, `Area`; `IsFamily` (`Name == "Семейная"`); `GetInfo()` — `"Семейная (500 м²)"`.
+
+**`Operator`** — `Id`, `FullName`, `Shift`, `Experience`; `IsExperienced` (`Experience > 3`); `GetInfo()` — `"Сидоров С.С. (5 лет опыта)"`.
+
+**`Attraction`** — `Id`, `Name`, `ZoneId`, `OperatorId`, `Price`, `Capacity`; `IsExtreme` (имя содержит `"Экстрим"`); `GetTotalRevenue(int visitors)` (при `visitors <= 0` — `0`); `GetInfo()` — `"Колесо обозрения (300 руб., 50 мест)"`.
+
+### Правила предметной области
+
+- `Name` зоны уникально. `Name` аттракциона **не уникально**. `FullName` оператора **не уникально**.
+
+### Репозитории
+
+`GetZones()`, `GetOperators()`, `GetAttractions()`.
+
+### Методы программы
+
+**1. Поиск оператора аттракциона.** Не найдено — `null`.
+
+**2. Поиск зоны аттракциона.** Не найдено — `null`.
+
+**3. Суммарная вместимость.** Пустой список — `0`.
+
+**4. Зона с максимальной вместимостью.** При равенстве — первая. Нет аттракционов — `null`.
+
+**5. Вывод всех аттракционов.** `<GetInfo()> — оператор <FullName>, зона "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindOperator("Колесо обозрения"): Сидоров С.С. (5 лет опыта)
+2. FindZone(attraction "Колесо обозрения"): Семейная (500 м²)
+3. GetTotalCapacity: 400 человек
+4. GetZoneWithMaxCapacity: Экстрим (200)
+5. PrintAllAttractions:
+"Колесо обозрения (300 руб., 50 мест)" — оператор Сидоров С.С., зона "Семейная"
+"Американские горки (500 руб., 30 мест)" — оператор Петров П.П., зона "Экстрим"
 
-**Классы, свойства и методы:**
-
-**`Zone`**
-- Свойства: `Id`, `Name`, `Area`
-- Вычисляемое свойство `IsFamily` — `true`, если `Name == "Семейная"`
-- Метод `GetInfo()` — `"Семейная (500 м²)"`
-
-**`Operator`**
-- Свойства: `Id`, `FullName`, `AttractionId`, `Shift`, `Experience`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 3`
-- Метод `GetInfo()` — `"Сидоров С.С. (5 лет опыта)"`
-
-**`Attraction`**
-- Свойства: `Id`, `Name`, `ZoneId`, `OperatorId`, `Price`, `Capacity`
-- Вычисляемое свойство `IsExtreme` — `true`, если в названии есть "Экстрим"
-- Метод `GetTotalRevenue(int visitors)` — выручка при N посетителях
-- Метод `GetInfo()` — `"Колесо обозрения (300 руб., 50 мест)"`
-
-**Репозитории:** `GetZones()`, `GetOperators()`, `GetAttractions()`
-
-**Методы программы:**
-- `FindOperator(attractions, operators, name)` — оператор аттракциона.
-- `FindZone(zones, attraction)` — зона аттракциона.
-- `GetTotalCapacity(attractions)` — суммарная вместимость.
-- `GetZoneWithMaxCapacity(attractions, zones)` — зона с макс. вместимостью.
-- `PrintAllAttractions(attractions, operators, zones)` — вывод аттракционов.
-
-**Вывод:**
-```
-Количество аттракционов: 8, операторов: 5
-"Колесо обозрения" обслуживает Сидоров С.С., зона "Семейная"
-Общая вместимость: 400 человек
-Зона с макс. вместимостью: Экстрим (200)
+Не найдено: FindOperator("Неизвестный аттракцион") → null
 ```
 
 ---
 
 ## Вариант 17. Пекарня
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    WORKSHOP ||--o{ BAKERY : "выпускает"
+    BAKER    ||--o{ BAKERY : "печёт"
+
+    WORKSHOP {
+        int    Id   PK
+        string Name
+        string Head
+    }
+    BAKER {
+        int    Id         PK
+        string FullName
+        int    Experience
+        string Shift
+    }
+    BAKERY {
+        int     Id         PK
+        string  Name
+        int     WorkshopId FK
+        int     BakerId    FK
+        decimal Price
+        int     Weight
+    }
 ```
-Workshop (1) ────< Bakery >──── (1) Baker
-  Id               Id              Id
-  Name             Name            FullName
-  Head             WorkshopId      BakeryId
-                   BakerId         Experience
-                   Price           Shift
-                   Weight
+
+### Классы
+
+**`Workshop`** — `Id`, `Name`, `Head`; `IsConfectionery` (`Name == "Кондитерский"`); `GetInfo()` — `"Кондитерский (зав.: Петрова А.А.)"`.
+
+**`Baker`** — `Id`, `FullName`, `Experience`, `Shift`; `IsExperienced` (`Experience > 3`); `GetInfo()` — `"Петрова А.А. (5 лет опыта)"`.
+
+**`Bakery`** — `Id`, `Name`, `WorkshopId`, `BakerId`, `Price`, `Weight`; `PricePerGram`; `IsHeavy` (`Weight > 300`); `GetInfo()` — `"Круассан (80 руб., 100 г)"`.
+
+### Правила предметной области
+
+- `Name` цеха уникально. `Weight` > 0. `Name` изделия **не уникально**. `FullName` пекаря **не уникально**.
+
+### Репозитории
+
+`GetWorkshops()`, `GetBakers()`, `GetBakery()`.
+
+### Методы программы
+
+**1. Поиск пекаря изделия.** Не найдено — `null`.
+
+**2. Поиск цеха изделия.** Не найдено — `null`.
+
+**3. Общий вес изделий.** Пустой список — `0`.
+
+**4. Пекарь с максимальным весом.** При равенстве — первый. Нет изделий — `null`.
+
+**5. Вывод всех изделий.** `<GetInfo()> — пекарь <FullName>, цех "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindBaker("Круассан"): Петрова А.А. (5 лет опыта)
+2. FindWorkshop(item "Круассан"): Кондитерский (зав.: Петрова А.А.)
+3. GetTotalWeight: 5600 г
+4. GetBakerWithMaxWeight: Петрова А.А. (1800 г)
+5. PrintAllBakery:
+"Круассан (80 руб., 100 г)" — пекарь Петрова А.А., цех "Кондитерский"
+"Батон (40 руб., 400 г)" — пекарь Иванов И.И., цех "Хлебный"
 
-**Классы, свойства и методы:**
-
-**`Workshop`**
-- Свойства: `Id`, `Name`, `Head`
-- Вычисляемое свойство `IsConfectionery` — `true`, если `Name == "Кондитерский"`
-- Метод `GetInfo()` — `"Кондитерский (зав.: Петрова А.А.)"`
-
-**`Baker`**
-- Свойства: `Id`, `FullName`, `BakeryId`, `Experience`, `Shift`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 3`
-- Метод `GetInfo()` — `"Петрова А.А. (5 лет опыта)"`
-
-**`Bakery`**
-- Свойства: `Id`, `Name`, `WorkshopId`, `BakerId`, `Price`, `Weight`
-- Вычисляемое свойство `PricePerGram` — `Price / Weight`
-- Вычисляемое свойство `IsHeavy` — `true`, если `Weight > 300`
-- Метод `GetInfo()` — `"Круассан (80 руб., 100 г)"`
-
-**Репозитории:** `GetWorkshops()`, `GetBakers()`, `GetBakery()`
-
-**Методы программы:**
-- `FindBaker(bakery, bakers, name)` — пекарь изделия.
-- `FindWorkshop(workshops, item)` — цех изделия.
-- `GetTotalWeight(bakery)` — общий вес.
-- `GetBakerWithMaxWeight(bakery, bakers)` — пекарь с максимальным весом.
-- `PrintAllBakery(bakery, bakers, workshops)` — вывод изделий.
-
-**Вывод:**
-```
-Количество изделий: 12, пекарей: 4
-"Круассан" печёт Петрова А.А., цех "Кондитерский"
-Общий вес: 5600 г
-Пекарь с макс. весом: Петрова А.А. (1800 г)
+Не найдено: FindBaker("Неизвестное изделие") → null
 ```
 
 ---
 
 ## Вариант 18. Зоопарк
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    KEEPER ||--o{ ANIMAL : "ухаживает"
+    AVIARY ||--o{ ANIMAL : "содержит"
+
+    KEEPER {
+        int    Id         PK
+        string FullName
+        int    Experience
+    }
+    AVIARY {
+        int    Id     PK
+        int    Number
+        string Type
+        int    Area
+    }
+    ANIMAL {
+        int    Id       PK
+        string Name
+        int    KeeperId FK
+        int    AviaryId FK
+        string Species
+        int    Age
+    }
 ```
-Keeper (1) ────< Animal >──── (1) Aviary
-  Id             Id              Id
-  FullName       Name            Number
-  Experience     KeeperId        AviaryId
-                 AviaryId        Type
-                 Species         Area
-                 Age
+
+### Классы
+
+**`Keeper`** — `Id`, `FullName`, `Experience`; `IsExperienced` (`Experience > 5`); `GetInfo()` — `"Иванов И.И. (10 лет опыта)"`.
+
+**`Aviary`** — `Id`, `Number`, `Type`, `Area`; `IsBig` (`Area > 50`); `GetInfo()` — `"Вольер №7 (100 м², хищники)"`.
+
+**`Animal`** — `Id`, `Name`, `KeeperId`, `AviaryId`, `Species`, `Age`; `IsPredator` (`Species == "Хищник"`); `IsOld` (`Age > 10`); `GetInfo()` — `"Лев (5 лет, хищник)"`.
+
+### Правила предметной области
+
+- `Number` вольера уникален. `Name` животного **не уникально**. `Age` ≥ 0.
+
+### Репозитории
+
+`GetKeepers()`, `GetAviaries()`, `GetAnimals()`.
+
+### Методы программы
+
+**1. Поиск смотрителя животного.** Не найдено — `null`.
+
+**2. Поиск вольера животного.** Не найдено — `null`.
+
+**3. Средний возраст.** Округлить до целого. Пустой список — `0`.
+
+**4. Количество животных по видам.** `Dictionary<string, int>`.
+
+**5. Вывод всех животных.** `<GetInfo()> — смотритель <FullName>, вольер №<Number>`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindKeeper("Лев"): Иванов И.И. (10 лет опыта)
+2. FindAviary(animal "Лев"): Вольер №7 (100 м², хищники)
+3. GetAverageAge: 8 лет
+4. CountAnimalsBySpecies: Хищник — 6, Травоядный — 9
+5. PrintAllAnimals:
+"Лев (5 лет, хищник)" — смотритель Иванов И.И., вольер №7
+"Зебра (7 лет, травоядный)" — смотритель Петров П.П., вольер №3
 
-**Классы, свойства и методы:**
-
-**`Keeper`**
-- Свойства: `Id`, `FullName`, `Experience`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 5`
-- Метод `GetInfo()` — `"Иванов И.И. (10 лет опыта)"`
-
-**`Aviary`**
-- Свойства: `Id`, `Number`, `Type`, `Area`
-- Вычисляемое свойство `IsBig` — `true`, если `Area > 50`
-- Метод `GetInfo()` — `"Вольер №7 (100 м², хищники)"`
-
-**`Animal`**
-- Свойства: `Id`, `Name`, `KeeperId`, `AviaryId`, `Species`, `Age`
-- Вычисляемое свойство `IsPredator` — `true`, если `Species == "Хищник"`
-- Вычисляемое свойство `IsOld` — `true`, если `Age > 10`
-- Метод `GetInfo()` — `"Лев (5 лет, хищник)"`
-
-**Репозитории:** `GetKeepers()`, `GetAviaries()`, `GetAnimals()`
-
-**Методы программы:**
-- `FindKeeper(animals, keepers, name)` — смотритель животного.
-- `FindAviary(aviaries, animal)` — вольер животного.
-- `GetAverageAge(animals)` — средний возраст.
-- `CountAnimalsBySpecies(animals)` — количество по видам.
-- `PrintAllAnimals(animals, keepers, aviaries)` — вывод животных.
-
-**Вывод:**
-```
-Количество животных: 15, смотрителей: 5
-"Лев" обслуживает Иванов И.И., вольер №7
-Средний возраст: 8 лет
-Виды: Хищник — 6, Травоядный — 9
+Не найдено: FindKeeper("Неизвестное животное") → null
 ```
 
 ---
 
 ## Вариант 19. Типография
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    DEPARTMENT ||--o{ EDITION : "выпускает"
+    EDITOR     ||--o{ EDITION : "редактирует"
+
+    DEPARTMENT {
+        int    Id   PK
+        string Name
+        string Head
+    }
+    EDITOR {
+        int    Id         PK
+        string FullName
+        int    Experience
+        string Specialty
+    }
+    EDITION {
+        int     Id           PK
+        string  Title
+        int     DepartmentId FK
+        int     EditorId     FK
+        int     Pages
+        decimal Price
+    }
 ```
-Department (1) ────< Edition >──── (1) Editor
-  Id                 Id              Id
-  Name               Title           FullName
-  Head               DepartmentId    EditionId
-                     EditorId        Experience
-                     Pages           Specialty
-                     Price
+
+### Классы
+
+**`Department`** — `Id`, `Name`, `Head`; `IsFiction` (`Name == "Художественная литература"`); `GetInfo()` — `"Художественная литература (зав.: Смирнова Е.В.)"`.
+
+**`Editor`** — `Id`, `FullName`, `Experience`, `Specialty`; `IsSenior` (`Experience > 10`); `GetInfo()` — `"Смирнова Е.В. (15 лет опыта)"`.
+
+**`Edition`** — `Id`, `Title`, `DepartmentId`, `EditorId`, `Pages`, `Price`; `IsThick` (`Pages > 500`); `PricePerPage`; `GetInfo()` — `"Тихий Дон (600 стр., 1200 руб.)"`.
+
+### Правила предметной области
+
+- `Title` издания уникален. `Name` отдела уникально. `FullName` редактора **не уникально**. `Pages` > 0.
+
+### Репозитории
+
+`GetDepartments()`, `GetEditors()`, `GetEditions()`.
+
+### Методы программы
+
+**1. Поиск редактора издания.** Не найдено — `null`.
+
+**2. Поиск отдела издания.** Не найдено — `null`.
+
+**3. Суммарное число страниц.** Пустой список — `0`.
+
+**4. Редактор с максимальным числом страниц.** При равенстве — первый. Нет изданий — `null`.
+
+**5. Вывод всех изданий.** `<GetInfo()> — редактор <FullName>, отдел "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindEditor("Тихий Дон"): Смирнова Е.В. (15 лет опыта)
+2. FindDepartment(edition "Тихий Дон"): Художественная литература (зав.: Смирнова Е.В.)
+3. GetTotalPages: 3200
+4. GetEditorWithMostPages: Смирнова Е.В. (1200)
+5. PrintAllEditions:
+"Тихий Дон (600 стр., 1200 руб.)" — редактор Смирнова Е.В., отдел "Художественная литература"
+"Война и мир (1225 стр., 1800 руб.)" — редактор Смирнова Е.В., отдел "Художественная литература"
 
-**Классы, свойства и методы:**
-
-**`Department`**
-- Свойства: `Id`, `Name`, `Head`
-- Вычисляемое свойство `IsFiction` — `true`, если `Name == "Художественная литература"`
-- Метод `GetInfo()` — `"Художественная литература (зав.: Смирнова Е.В.)"`
-
-**`Editor`**
-- Свойства: `Id`, `FullName`, `EditionId`, `Experience`, `Specialty`
-- Вычисляемое свойство `IsSenior` — `true`, если `Experience > 10`
-- Метод `GetInfo()` — `"Смирнова Е.В. (15 лет опыта)"`
-
-**`Edition`**
-- Свойства: `Id`, `Title`, `DepartmentId`, `EditorId`, `Pages`, `Price`
-- Вычисляемое свойство `IsThick` — `true`, если `Pages > 500`
-- Вычисляемое свойство `PricePerPage` — `Price / Pages`
-- Метод `GetInfo()` — `"Тихий Дон (600 стр., 1200 руб.)"`
-
-**Репозитории:** `GetDepartments()`, `GetEditors()`, `GetEditions()`
-
-**Методы программы:**
-- `FindEditor(editions, editors, title)` — редактор издания.
-- `FindDepartment(departments, edition)` — отдел издания.
-- `GetTotalPages(editions)` — суммарное число страниц.
-- `GetEditorWithMostPages(editions, editors)` — редактор с макс. страниц.
-- `PrintAllEditions(editions, editors, departments)` — вывод изданий.
-
-**Вывод:**
-```
-Количество изданий: 9, редакторов: 4
-"Тихий Дон" редактирует Смирнова Е.В., отдел "Художественная литература"
-Общее количество страниц: 3200
-Редактор с макс. страниц: Смирнова Е.В. (1200)
+Не найдено: FindEditor("Неизвестное издание") → null
 ```
 
 ---
 
 ## Вариант 20. Склад
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    SECTION     ||--o{ ITEM : "хранит"
+    STOREKEEPER ||--o{ ITEM : "отвечает за"
+
+    SECTION {
+        int    Id   PK
+        string Name
+        int    Area
+    }
+    STOREKEEPER {
+        int    Id         PK
+        string FullName
+        string Shift
+        int    Experience
+    }
+    ITEM {
+        int     Id            PK
+        string  Name
+        int     SectionId     FK
+        int     StorekeeperId FK
+        int     Quantity
+        decimal Price
+    }
 ```
-Section (1) ────< Item >──── (1) Storekeeper
-  Id              Id             Id
-  Name            Name           FullName
-  Area            SectionId      ItemId
-                  StorekeeperId  Shift
-                  Quantity       Experience
-                  Price
+
+### Классы
+
+**`Section`** — `Id`, `Name`, `Area`; `IsBig` (`Area > 200`); `GetInfo()` — `"Метизы (300 м²)"`.
+
+**`Storekeeper`** — `Id`, `FullName`, `Shift`, `Experience`; `IsMorningShift` (`Shift == "Утренняя"`); `GetInfo()` — `"Петров П.П. (5 лет опыта)"`.
+
+**`Item`** — `Id`, `Name`, `SectionId`, `StorekeeperId`, `Quantity`, `Price`; `TotalValue`; `IsLowStock(int threshold)`; `GetInfo()` — `"Болты М8 (1000 шт., 5 руб.)"`.
+
+### Правила предметной области
+
+- `Name` секции уникально. `Name` товара **не уникально**. `FullName` кладовщика **не уникально**. `Quantity`, `Price` ≥ 0.
+
+### Репозитории
+
+`GetSections()`, `GetStorekeepers()`, `GetItems()`.
+
+### Методы программы
+
+**1. Поиск кладовщика товара.** Не найдено — `null`.
+
+**2. Поиск секции товара.** Не найдено — `null`.
+
+**3. Общее количество товаров.** Пустой список — `0`.
+
+**4. Товары ниже порога.** Список товаров с `Quantity < threshold`.
+
+**5. Вывод всех товаров.** `<GetInfo()> — кладовщик <FullName>, секция "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindStorekeeper("Болты М8"): Петров П.П. (5 лет опыта)
+2. FindSection(item "Болты М8"): Метизы (300 м²)
+3. GetTotalQuantity: 15000 шт.
+4. GetItemsBelowThreshold(100): Гайки (50), Шайбы (80)
+5. PrintAllItems:
+"Болты М8 (1000 шт., 5 руб.)" — кладовщик Петров П.П., секция "Метизы"
+"Гайки М8 (50 шт., 3 руб.)" — кладовщик Петров П.П., секция "Метизы"
 
-**Классы, свойства и методы:**
-
-**`Section`**
-- Свойства: `Id`, `Name`, `Area`
-- Вычисляемое свойство `IsBig` — `true`, если `Area > 200`
-- Метод `GetInfo()` — `"Метизы (300 м²)"`
-
-**`Storekeeper`**
-- Свойства: `Id`, `FullName`, `ItemId`, `Shift`, `Experience`
-- Вычисляемое свойство `IsMorningShift` — `true`, если `Shift == "Утренняя"`
-- Метод `GetInfo()` — `"Петров П.П. (5 лет опыта)"`
-
-**`Item`**
-- Свойства: `Id`, `Name`, `SectionId`, `StorekeeperId`, `Quantity`, `Price`
-- Вычисляемое свойство `TotalValue` — `Quantity * Price`
-- Метод `IsLowStock(int threshold)` — `true`, если `Quantity < threshold`
-- Метод `GetInfo()` — `"Болты М8 (1000 шт., 5 руб.)"`
-
-**Репозитории:** `GetSections()`, `GetStorekeepers()`, `GetItems()`
-
-**Методы программы:**
-- `FindStorekeeper(items, storekeepers, name)` — кладовщик товара.
-- `FindSection(sections, item)` — секция товара.
-- `GetTotalQuantity(items)` — общее количество.
-- `GetItemsBelowThreshold(items, threshold)` — товары ниже порога.
-- `PrintAllItems(items, storekeepers, sections)` — вывод товаров.
-
-**Вывод:**
-```
-Количество товаров: 20, кладовщиков: 3
-"Болты М8" у Петрова П.П., секция "Метизы"
-Общее количество: 15000 шт.
-Товары ниже порога 100: Гайки (50), Шайбы (80)
+Не найдено: FindStorekeeper("Неизвестный товар") → null
 ```
 
 ---
 
 ## Вариант 21. Турагентство
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    COUNTRY ||--o{ TOUR : "направление"
+    MANAGER ||--o{ TOUR : "ведёт"
+
+    COUNTRY {
+        int    Id        PK
+        string Name
+        string Continent
+    }
+    MANAGER {
+        int    Id         PK
+        string FullName
+        string Phone
+        int    Experience
+    }
+    TOUR {
+        int     Id        PK
+        string  Name
+        int     CountryId FK
+        int     ManagerId FK
+        decimal Price
+        int     Days
+    }
 ```
-Country (1) ────< Tour >──── (1) Manager
-  Id              Id            Id
-  Name            Name          FullName
-  Continent       CountryId     TourId
-                  ManagerId     Phone
-                  Price         Experience
-                  Days
+
+### Классы
+
+**`Country`** — `Id`, `Name`, `Continent`; `IsEurope` (`Continent == "Европа"`); `GetInfo()` — `"Турция (Азия)"`.
+
+**`Manager`** — `Id`, `FullName`, `Phone`, `Experience`; `IsExperienced` (`Experience > 3`); `GetInfo()` — `"Иванова А.А. (5 лет опыта)"`.
+
+**`Tour`** — `Id`, `Name`, `CountryId`, `ManagerId`, `Price`, `Days`; `PricePerDay`; `IsLong` (`Days > 10`); `GetInfo()` — `"Пляжный отдых (7 дней, 50000 руб.)"`.
+
+### Правила предметной области
+
+- `Name` страны уникально. `Name` тура **не уникально**. `FullName` менеджера **не уникально**. `Days` > 0.
+
+### Репозитории
+
+`GetCountries()`, `GetManagers()`, `GetTours()`.
+
+### Методы программы
+
+**1. Поиск менеджера тура.** Не найдено — `null`.
+
+**2. Поиск страны тура.** Не найдено — `null`.
+
+**3. Суммарное число дней.** Пустой список — `0`.
+
+**4. Самая популярная страна.** По числу туров. При равенстве — первая. Нет туров — `null`.
+
+**5. Вывод всех туров.** `<GetInfo()> — менеджер <FullName>, страна "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindManager("Пляжный отдых"): Иванова А.А. (5 лет опыта)
+2. FindCountry(tour "Пляжный отдых"): Турция (Азия)
+3. GetTotalDays: 56
+4. GetMostPopularCountry: Турция (3 тура)
+5. PrintAllTours:
+"Пляжный отдых (7 дней, 50000 руб.)" — менеджер Иванова А.А., страна "Турция"
+"Экскурсионный (5 дней, 40000 руб.)" — менеджер Петров П.П., страна "Италия"
 
-**Классы, свойства и методы:**
-
-**`Country`**
-- Свойства: `Id`, `Name`, `Continent`
-- Вычисляемое свойство `IsEurope` — `true`, если `Continent == "Европа"`
-- Метод `GetInfo()` — `"Турция (Азия)"`
-
-**`Manager`**
-- Свойства: `Id`, `FullName`, `TourId`, `Phone`, `Experience`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 3`
-- Метод `GetInfo()` — `"Иванова А.А. (5 лет опыта)"`
-
-**`Tour`**
-- Свойства: `Id`, `Name`, `CountryId`, `ManagerId`, `Price`, `Days`
-- Вычисляемое свойство `PricePerDay` — `Price / Days`
-- Вычисляемое свойство `IsLong` — `true`, если `Days > 10`
-- Метод `GetInfo()` — `"Пляжный отдых (7 дней, 50000 руб.)"`
-
-**Репозитории:** `GetCountries()`, `GetManagers()`, `GetTours()`
-
-**Методы программы:**
-- `FindManager(tours, managers, name)` — менеджер тура.
-- `FindCountry(countries, tour)` — страна тура.
-- `GetTotalDays(tours)` — суммарное число дней.
-- `GetMostPopularCountry(tours, countries)` — страна с макс. туров.
-- `PrintAllTours(tours, managers, countries)` — вывод туров.
-
-**Вывод:**
-```
-Количество туров: 7, менеджеров: 3
-"Пляжный отдых" ведёт Иванова А.А., страна "Турция"
-Общее количество дней: 56
-Самая популярная страна: Турция (3 тура)
+Не найдено: FindManager("Неизвестный тур") → null
 ```
 
 ---
 
 ## Вариант 22. Кофейня
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    SHIFT   ||--o{ DRINK : "включает"
+    BARISTA ||--o{ DRINK : "готовит"
+
+    SHIFT {
+        int      Id   PK
+        string   Time
+        DateTime Date
+    }
+    BARISTA {
+        int    Id         PK
+        string FullName
+        int    Experience
+        double Rating
+    }
+    DRINK {
+        int     Id        PK
+        string  Name
+        int     ShiftId   FK
+        int     BaristaId FK
+        decimal Price
+        int     Volume
+    }
 ```
-Shift (1) ────< Drink >──── (1) Barista
-  Id            Id             Id
-  Time          Name           FullName
-  Date          ShiftId        DrinkId
-                BaristaId      Experience
-                Price          Rating
-                Volume
+
+### Классы
+
+**`Shift`** — `Id`, `Time`, `Date`; `IsMorning` (`Time == "Утренняя"`); `GetInfo()` — `"Утренняя (01.09.2025)"`.
+
+**`Barista`** — `Id`, `FullName`, `Experience`, `Rating`; `IsExperienced` (`Experience > 2`); `GetInfo()` — `"Петров П.П. (3 года, рейтинг 4.8)"`.
+
+**`Drink`** — `Id`, `Name`, `ShiftId`, `BaristaId`, `Price`, `Volume`; `PricePerMl`; `IsHot` (имя содержит `"Кофе"` или `"Чай"`); `GetInfo()` — `"Латте (250 руб., 300 мл)"`.
+
+### Правила предметной области
+
+- `Name` напитка **не уникально**. `FullName` бариста **не уникально**. `Rating` — 0–5. `Volume` > 0. `Date` в CSV — `dd.MM.yyyy`.
+
+### Репозитории
+
+`GetShifts()`, `GetBaristas()`, `GetDrinks()`.
+
+### Методы программы
+
+**1. Поиск бариста напитка.** Не найдено — `null`.
+
+**2. Поиск смены напитка.** Не найдено — `null`.
+
+**3. Общий объём напитков.** Пустой список — `0`.
+
+**4. Средний рейтинг по бариста.** `Dictionary<string, double>`, округлить до 1 знака.
+
+**5. Вывод всех напитков.** `<GetInfo()> — бариста <FullName>, смена "<Time>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindBarista("Латте"): Петров П.П. (3 года, рейтинг 4.8)
+2. FindShift(drink "Латте"): Утренняя (01.09.2025)
+3. GetTotalVolume: 3500 мл
+4. GetBaristaRating: Петров — 4.8, Иванов — 4.5
+5. PrintAllDrinks:
+"Латте (250 руб., 300 мл)" — бариста Петров П.П., смена "Утренняя"
+"Капучино (220 руб., 250 мл)" — бариста Иванов И.И., смена "Утренняя"
 
-**Классы, свойства и методы:**
-
-**`Shift`**
-- Свойства: `Id`, `Time`, `Date`
-- Вычисляемое свойство `IsMorning` — `true`, если `Time == "Утренняя"`
-- Метод `GetInfo()` — `"Утренняя (01.09.2025)"`
-
-**`Barista`**
-- Свойства: `Id`, `FullName`, `DrinkId`, `Experience`, `Rating`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 2`
-- Метод `GetInfo()` — `"Петров П.П. (3 года, рейтинг 4.8)"`
-
-**`Drink`**
-- Свойства: `Id`, `Name`, `ShiftId`, `BaristaId`, `Price`, `Volume`
-- Вычисляемое свойство `PricePerMl` — `Price / Volume`
-- Вычисляемое свойство `IsHot` — `true`, если `Name` содержит "Кофе" или "Чай"
-- Метод `GetInfo()` — `"Латте (250 руб., 300 мл)"`
-
-**Репозитории:** `GetShifts()`, `GetBaristas()`, `GetDrinks()`
-
-**Методы программы:**
-- `FindBarista(drinks, baristas, name)` — бариста напитка.
-- `FindShift(shifts, drink)` — смена напитка.
-- `GetTotalVolume(drinks)` — общий объём.
-- `GetBaristaRating(baristas, drinks)` — средний рейтинг по бариста.
-- `PrintAllDrinks(drinks, baristas, shifts)` — вывод напитков.
-
-**Вывод:**
-```
-Количество напитков: 10, бариста: 4
-"Латте" готовит Петров П.П., смена "Утренняя"
-Общий объём: 3500 мл
-Рейтинг бариста: Петров — 4.8, Иванов — 4.5
+Не найдено: FindBarista("Неизвестный напиток") → null
 ```
 
 ---
 
 ## Вариант 23. Фотостудия
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    PHOTOGRAPHER ||--o{ PHOTOSESSION : "проводит"
+    CLIENT       ||--o{ PHOTOSESSION : "заказывает"
+
+    PHOTOGRAPHER {
+        int    Id         PK
+        string FullName
+        int    Experience
+    }
+    CLIENT {
+        int    Id       PK
+        string FullName
+        string Phone
+        string Email
+    }
+    PHOTOSESSION {
+        int      Id             PK
+        string   Name
+        int      PhotographerId FK
+        int      ClientId       FK
+        DateTime Date
+        decimal  Price
+        int      Duration
+    }
 ```
-Photographer (1) ────< PhotoSession >──── (1) Client
-  Id                   Id                   Id
-  FullName             Name                 FullName
-  Experience           PhotographerId       SessionId
-                       ClientId             Phone
-                       Date                 Email
-                       Price
-                       Duration
+
+### Классы
+
+**`Photographer`** — `Id`, `FullName`, `Experience`; `IsExperienced` (`Experience > 5`); `GetInfo()` — `"Сидоров С.С. (8 лет опыта)"`.
+
+**`Client`** — `Id`, `FullName`, `Phone`, `Email`; `HasEmail()` — `true`, если `Email` не пуст; `GetInfo()` — `"Иванова А.А. (ivanova@mail.ru)"`.
+
+**`PhotoSession`** — `Id`, `Name`, `PhotographerId`, `ClientId`, `Date`, `Price`, `Duration`; `PricePerHour`; `IsLong` (`Duration > 3`); `GetInfo()` — `"Свадебная (3 ч, 15000 руб.)"`.
+
+### Правила предметной области
+
+- `Name` фотосессии **не уникально**. `FullName` фотографа и клиента **не уникальны**. `Duration` > 0. `Date` в CSV — `dd.MM.yyyy`.
+
+### Репозитории
+
+`GetPhotographers()`, `GetClients()`, `GetSessions()`.
+
+### Методы программы
+
+**1. Поиск фотографа сессии.** Не найдено — `null`.
+
+**2. Поиск клиента сессии.** Не найдено — `null`.
+
+**3. Общая длительность сессий.** Пустой список — `0`.
+
+**4. Фотограф с максимальной выручкой.** При равенстве — первый. Нет сессий — `null`.
+
+**5. Вывод всех сессий.** `<GetInfo()> — фотограф <FullName>, клиент <FullName>`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindPhotographer("Свадебная"): Сидоров С.С. (8 лет опыта)
+2. FindClient(session "Свадебная"): Иванова А.А. (ivanova@mail.ru)
+3. GetTotalDuration: 12 часов
+4. GetPhotographerWithMaxRevenue: Сидоров С.С. (45000 руб.)
+5. PrintAllSessions:
+"Свадебная (3 ч, 15000 руб.)" — фотограф Сидоров С.С., клиент Иванова А.А.
+"Портретная (2 ч, 8000 руб.)" — фотограф Петров П.П., клиент Кузнецов Д.Д.
 
-**Классы, свойства и методы:**
-
-**`Photographer`**
-- Свойства: `Id`, `FullName`, `Experience`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 5`
-- Метод `GetInfo()` — `"Сидоров С.С. (8 лет опыта)"`
-
-**`Client`**
-- Свойства: `Id`, `FullName`, `SessionId`, `Phone`, `Email`
-- Метод `HasEmail()` — `true`, если `Email` не пустой
-- Метод `GetInfo()` — `"Иванова А.А. (ivanova@mail.ru)"`
-
-**`PhotoSession`**
-- Свойства: `Id`, `Name`, `PhotographerId`, `ClientId`, `Date`, `Price`, `Duration`
-- Вычисляемое свойство `PricePerHour` — `Price / Duration`
-- Вычисляемое свойство `IsLong` — `true`, если `Duration > 3`
-- Метод `GetInfo()` — `"Свадебная (3 ч, 15000 руб.)"`
-
-**Репозитории:** `GetPhotographers()`, `GetClients()`, `GetSessions()`
-
-**Методы программы:**
-- `FindPhotographer(sessions, photographers, name)` — фотограф сессии.
-- `FindClient(clients, session)` — клиент сессии.
-- `GetTotalDuration(sessions)` — общая длительность.
-- `GetPhotographerWithMaxRevenue(sessions, photographers)` — фотограф с макс. выручкой.
-- `PrintAllSessions(sessions, photographers, clients)` — вывод сессий.
-
-**Вывод:**
-```
-Количество фотосессий: 6, фотографов: 3
-"Свадебная" проводит Сидоров С.С., клиент Иванова А.А.
-Общая длительность: 12 часов
-Макс. выручка: Сидоров С.С. (45000 руб.)
+Не найдено: FindPhotographer("Неизвестная сессия") → null
 ```
 
 ---
 
 ## Вариант 24. Автосалон
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    BRAND   ||--o{ CAR : "выпускает"
+    MANAGER ||--o{ CAR : "продаёт"
+
+    BRAND {
+        int    Id      PK
+        string Name
+        string Country
+    }
+    MANAGER {
+        int    Id         PK
+        string FullName
+        string Phone
+        int    Experience
+    }
+    CAR {
+        int     Id        PK
+        string  Model
+        int     BrandId   FK
+        int     ManagerId FK
+        decimal Price
+        int     Year
+    }
 ```
-Brand (1) ────< Car >──── (1) Manager
-  Id            Id           Id
-  Name          Model        FullName
-  Country       BrandId      CarId
-                ManagerId    Phone
-                Price        Experience
-                Year
+
+### Классы
+
+**`Brand`** — `Id`, `Name`, `Country`; `IsForeign` (`Country != "Россия"`); `GetInfo()` — `"Toyota (Япония)"`.
+
+**`Manager`** — `Id`, `FullName`, `Phone`, `Experience`; `IsExperienced` (`Experience > 3`); `GetInfo()` — `"Петров П.П. (5 лет опыта)"`.
+
+**`Car`** — `Id`, `Model`, `BrandId`, `ManagerId`, `Price`, `Year`; `IsNew` (`Year >= 2023`); `GetDepreciation(int years)` — линейно `Price * (1 - 0.1 * years)`, при `years <= 0` — `Price`, при `years > 10` — `0`; `GetInfo()` — `"Camry (2023, 3000000 руб.)"`.
+
+### Правила предметной области
+
+- `Name` бренда уникально. `Model` машины **не уникальна**. `FullName` менеджера **не уникально**. `Year` — 1900–2100. `Price` ≥ 0.
+
+### Репозитории
+
+`GetBrands()`, `GetManagers()`, `GetCars()`.
+
+### Методы программы
+
+**1. Поиск менеджера автомобиля.** Не найдено — `null`.
+
+**2. Поиск бренда автомобиля.** Не найдено — `null`.
+
+**3. Общая стоимость автомобилей.** Пустой список — `0`.
+
+**4. Машины бренда по цене.** Сортировка по возрастанию — **вручную**.
+
+**5. Вывод всех автомобилей.** `<GetInfo()> — менеджер <FullName>, бренд "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindManager("Camry"): Петров П.П. (5 лет опыта)
+2. FindBrand(car "Camry"): Toyota (Япония)
+3. GetTotalPrice: 24000000 руб.
+4. GetCarsByBrandSortedByPrice("Toyota"): Corolla (2000000), Camry (3000000)
+5. PrintAllCars:
+"Camry (2023, 3000000 руб.)" — менеджер Петров П.П., бренд "Toyota"
+"Corolla (2023, 2000000 руб.)" — менеджер Иванов И.И., бренд "Toyota"
 
-**Классы, свойства и методы:**
-
-**`Brand`**
-- Свойства: `Id`, `Name`, `Country`
-- Вычисляемое свойство `IsForeign` — `true`, если `Country != "Россия"`
-- Метод `GetInfo()` — `"Toyota (Япония)"`
-
-**`Manager`**
-- Свойства: `Id`, `FullName`, `CarId`, `Phone`, `Experience`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 3`
-- Метод `GetInfo()` — `"Петров П.П. (5 лет опыта)"`
-
-**`Car`**
-- Свойства: `Id`, `Model`, `BrandId`, `ManagerId`, `Price`, `Year`
-- Вычисляемое свойство `IsNew` — `true`, если `Year >= 2023`
-- Метод `GetDepreciation(int years)` — остаточная стоимость через N лет
-- Метод `GetInfo()` — `"Camry (2023, 3000000 руб.)"`
-
-**Репозитории:** `GetBrands()`, `GetManagers()`, `GetCars()`
-
-**Методы программы:**
-- `FindManager(cars, managers, model)` — менеджер автомобиля.
-- `FindBrand(brands, car)` — марка автомобиля.
-- `GetTotalPrice(cars)` — общая стоимость.
-- `GetCarsByBrandSortedByPrice(cars, brands, brandName)` — машины марки по цене.
-- `PrintAllCars(cars, managers, brands)` — вывод автомобилей.
-
-**Вывод:**
-```
-Количество автомобилей: 8, менеджеров: 3
-"Camry" продаёт Петров П.П., марка "Toyota"
-Общая стоимость: 24000000 руб.
-Toyota по цене: Camry (3000000), Corolla (2000000)
+Не найдено: FindManager("Неизвестная модель") → null
 ```
 
 ---
 
 ## Вариант 25. Аптека
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    CATEGORY   ||--o{ MEDICINE : "содержит"
+    PHARMACIST ||--o{ MEDICINE : "отпускает"
+
+    CATEGORY {
+        int    Id          PK
+        string Name
+        string Description
+    }
+    PHARMACIST {
+        int    Id         PK
+        string FullName
+        string Shift
+        int    Experience
+    }
+    MEDICINE {
+        int     Id           PK
+        string  Name
+        int     CategoryId   FK
+        int     PharmacistId FK
+        decimal Price
+        int     Quantity
+    }
 ```
-Category (1) ────< Medicine >──── (1) Pharmacist
-  Id               Id               Id
-  Name             Name             FullName
-  Description      CategoryId       MedicineId
-                   PharmacistId     Shift
-                   Price            Experience
-                   Quantity
+
+### Классы
+
+**`Category`** — `Id`, `Name`, `Description`; `Info` — `"Обезболивающие — от боли"`.
+
+**`Pharmacist`** — `Id`, `FullName`, `Shift`, `Experience`; `IsExperienced` (`Experience > 3`); `GetInfo()` — `"Иванова А.А. (5 лет опыта)"`.
+
+**`Medicine`** — `Id`, `Name`, `CategoryId`, `PharmacistId`, `Price`, `Quantity`; `TotalValue`; `IsLowStock(int threshold)`; `GetInfo()` — `"Аспирин (50 руб., 100 уп.)"`.
+
+### Правила предметной области
+
+- `Name` категории уникально. `Name` лекарства **не уникально**. `FullName` фармацевта **не уникально**. `Price`, `Quantity` ≥ 0.
+
+### Репозитории
+
+`GetCategories()`, `GetPharmacists()`, `GetMedicines()`.
+
+### Методы программы
+
+**1. Поиск фармацевта лекарства.** Не найдено — `null`.
+
+**2. Поиск категории лекарства.** Не найдено — `null`.
+
+**3. Общее количество упаковок.** Пустой список — `0`.
+
+**4. Лекарства ниже порога.** Список с `Quantity < threshold`.
+
+**5. Вывод всех лекарств.** `<GetInfo()> — фармацевт <FullName>, категория "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindPharmacist("Аспирин"): Иванова А.А. (5 лет опыта)
+2. FindCategory(medicine "Аспирин"): Обезболивающие — от боли
+3. GetTotalQuantity: 500 упаковок
+4. GetLowStockMedicines(20): Аспирин (10), Анальгин (15)
+5. PrintAllMedicines:
+"Аспирин (50 руб., 100 уп.)" — фармацевт Иванова А.А., категория "Обезболивающие"
+"Анальгин (30 руб., 15 уп.)" — фармацевт Иванова А.А., категория "Обезболивающие"
 
-**Классы, свойства и методы:**
-
-**`Category`**
-- Свойства: `Id`, `Name`, `Description`
-- Вычисляемое свойство `Info` — `"Обезболивающие — от боли"`
-
-**`Pharmacist`**
-- Свойства: `Id`, `FullName`, `MedicineId`, `Shift`, `Experience`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 3`
-- Метод `GetInfo()` — `"Иванова А.А. (5 лет опыта)"`
-
-**`Medicine`**
-- Свойства: `Id`, `Name`, `CategoryId`, `PharmacistId`, `Price`, `Quantity`
-- Вычисляемое свойство `TotalValue` — `Price * Quantity`
-- Метод `IsLowStock(int threshold)` — `true`, если `Quantity < threshold`
-- Метод `GetInfo()` — `"Аспирин (50 руб., 100 уп.)"`
-
-**Репозитории:** `GetCategories()`, `GetPharmacists()`, `GetMedicines()`
-
-**Методы программы:**
-- `FindPharmacist(medicines, pharmacists, name)` — фармацевт лекарства.
-- `FindCategory(categories, medicine)` — категория лекарства.
-- `GetTotalQuantity(medicines)` — общее количество.
-- `GetLowStockMedicines(medicines, threshold)` — лекарства ниже порога.
-- `PrintAllMedicines(medicines, pharmacists, categories)` — вывод лекарств.
-
-**Вывод:**
-```
-Количество лекарств: 15, фармацевтов: 4
-"Аспирин" отпускает Иванова А.А., категория "Обезболивающие"
-Общее количество: 500 упаковок
-Лекарства ниже порога 20: Аспирин (10), Анальгин (15)
+Не найдено: FindPharmacist("Неизвестное лекарство") → null
 ```
 
 ---
 
 ## Вариант 26. Киностудия
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    STUDIO   ||--o{ FILM : "выпускает"
+    DIRECTOR ||--o{ FILM : "снимает"
+
+    STUDIO {
+        int    Id      PK
+        string Name
+        string Country
+    }
+    DIRECTOR {
+        int    Id         PK
+        string FullName
+        int    Experience
+        int    Awards
+    }
+    FILM {
+        int     Id         PK
+        string  Title
+        int     StudioId   FK
+        int     DirectorId FK
+        int     Year
+        decimal Budget
+    }
 ```
-Studio (1) ────< Film >──── (1) Director
-  Id             Id            Id
-  Name           Title         FullName
-  Country        StudioId      FilmId
-                 DirectorId    Experience
-                 Year          Awards
-                 Budget
+
+### Классы
+
+**`Studio`** — `Id`, `Name`, `Country`; `IsForeign` (`Country != "Россия"`); `GetInfo()` — `"Warner Bros (США)"`.
+
+**`Director`** — `Id`, `FullName`, `Experience`, `Awards`; `IsExperienced` (`Experience > 10`); `GetInfo()` — `"Нолан К. (20 лет, 5 наград)"`.
+
+**`Film`** — `Id`, `Title`, `StudioId`, `DirectorId`, `Year`, `Budget`; `IsExpensive` (`Budget > 100000000`); `GetInfo()` — `"Начало (2010, 160000000 руб.)"`.
+
+### Правила предметной области
+
+- `Title` фильма уникален. `Name` студии уникально. `FullName` режиссёра **не уникально**. `Awards`, `Budget` ≥ 0.
+
+### Репозитории
+
+`GetStudios()`, `GetDirectors()`, `GetFilms()`.
+
+### Методы программы
+
+**1. Поиск режиссёра фильма.** Не найдено — `null`.
+
+**2. Поиск студии фильма.** Не найдено — `null`.
+
+**3. Общий бюджет.** Пустой список — `0`.
+
+**4. Режиссёр с максимальным бюджетом.** При равенстве — первый. Нет фильмов — `null`.
+
+**5. Вывод всех фильмов.** `<GetInfo()> — режиссёр <FullName>, студия "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindDirector("Начало"): Нолан К. (20 лет, 5 наград)
+2. FindStudio(film "Начало"): Warner Bros (США)
+3. GetTotalBudget: 500000000 руб.
+4. GetDirectorWithMaxBudget: Нолан К. (300000000)
+5. PrintAllFilms:
+"Начало (2010, 160000000 руб.)" — режиссёр Нолан К., студия "Warner Bros"
+"Интерстеллар (2014, 140000000 руб.)" — режиссёр Нолан К., студия "Paramount"
 
-**Классы, свойства и методы:**
-
-**`Studio`**
-- Свойства: `Id`, `Name`, `Country`
-- Вычисляемое свойство `IsForeign` — `true`, если `Country != "Россия"`
-- Метод `GetInfo()` — `"Warner Bros (США)"`
-
-**`Director`**
-- Свойства: `Id`, `FullName`, `FilmId`, `Experience`, `Awards`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 10`
-- Метод `GetInfo()` — `"Нолан К. (20 лет, 5 наград)"`
-
-**`Film`**
-- Свойства: `Id`, `Title`, `StudioId`, `DirectorId`, `Year`, `Budget`
-- Вычисляемое свойство `IsExpensive` — `true`, если `Budget > 100000000`
-- Метод `GetInfo()` — `"Начало (2010, 160000000 руб.)"`
-
-**Репозитории:** `GetStudios()`, `GetDirectors()`, `GetFilms()`
-
-**Методы программы:**
-- `FindDirector(films, directors, title)` — режиссёр фильма.
-- `FindStudio(studios, film)` — студия фильма.
-- `GetTotalBudget(films)` — общий бюджет.
-- `GetDirectorWithMaxBudget(films, directors)` — режиссёр с макс. бюджетом.
-- `PrintAllFilms(films, directors, studios)` — вывод фильмов.
-
-**Вывод:**
-```
-Количество фильмов: 6, режиссёров: 3
-"Начало" снял Нолан К., студия "Warner Bros"
-Общий бюджет: 500000000 руб.
-Режиссёр с макс. бюджетом: Нолан К. (300000000)
+Не найдено: FindDirector("Неизвестный фильм") → null
 ```
 
 ---
 
 ## Вариант 27. Вокзал
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    DIRECTION ||--o{ TRAIN : "по направлению"
+    DRIVER    ||--o{ TRAIN : "управляет"
+
+    DIRECTION {
+        int    Id       PK
+        string Name
+        int    Distance
+    }
+    DRIVER {
+        int    Id         PK
+        string FullName
+        int    Experience
+        string License
+    }
+    TRAIN {
+        int    Id          PK
+        string Number
+        int    DirectionId FK
+        int    DriverId    FK
+        int    Capacity
+        string Type
+    }
 ```
-Direction (1) ────< Train >──── (1) Driver
-  Id                Id            Id
-  Name              Number        FullName
-  Distance          DirectionId   TrainId
-                    DriverId      Experience
-                    Capacity      License
-                    Type
+
+### Классы
+
+**`Direction`** — `Id`, `Name`, `Distance`; `IsLong` (`Distance > 500`); `GetInfo()` — `"Москва-Питер (650 км)"`.
+
+**`Driver`** — `Id`, `FullName`, `Experience`, `License`; `IsExperienced` (`Experience > 10`); `GetInfo()` — `"Иванов И.И. (15 лет стажа)"`.
+
+**`Train`** — `Id`, `Number`, `DirectionId`, `DriverId`, `Capacity`, `Type`; `IsFast` (`Type == "Скоростной"`); `GetInfo()` — `"№123 (Скоростной, 500 мест)"`.
+
+### Правила предметной области
+
+- `Number` поезда уникален. `Name` направления уникально. `FullName` машиниста **не уникально**. `Capacity`, `Distance` > 0.
+
+### Репозитории
+
+`GetDirections()`, `GetDrivers()`, `GetTrains()`.
+
+### Методы программы
+
+**1. Поиск машиниста поезда.** Не найдено — `null`.
+
+**2. Поиск направления поезда.** Не найдено — `null`.
+
+**3. Суммарная вместимость поездов.** Пустой список — `0`.
+
+**4. Число поездов по направлениям.** `Dictionary<string, int>` — только непустые.
+
+**5. Вывод всех поездов.** `<GetInfo()> — машинист <FullName>, направление "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindDriver("№123"): Иванов И.И. (15 лет стажа)
+2. FindDirection(train "№123"): Москва-Питер (650 км)
+3. GetTotalCapacity: 5000 пассажиров
+4. GetDirectionsByTrainCount: Москва-Питер — 3, Москва-Казань — 2
+5. PrintAllTrains:
+"№123 (Скоростной, 500 мест)" — машинист Иванов И.И., направление "Москва-Питер"
+"№456 (Пассажирский, 400 мест)" — машинист Петров П.П., направление "Москва-Казань"
 
-**Классы, свойства и методы:**
-
-**`Direction`**
-- Свойства: `Id`, `Name`, `Distance`
-- Вычисляемое свойство `IsLong` — `true`, если `Distance > 500`
-- Метод `GetInfo()` — `"Москва-Питер (650 км)"`
-
-**`Driver`**
-- Свойства: `Id`, `FullName`, `TrainId`, `Experience`, `License`
-- Вычисляемое свойство `IsExperienced` — `true`, если `Experience > 10`
-- Метод `GetInfo()` — `"Иванов И.И. (15 лет стажа)"`
-
-**`Train`**
-- Свойства: `Id`, `Number`, `DirectionId`, `DriverId`, `Capacity`, `Type`
-- Вычисляемое свойство `IsFast` — `true`, если `Type == "Скоростной"`
-- Метод `GetInfo()` — `"№123 (Скоростной, 500 мест)"`
-
-**Репозитории:** `GetDirections()`, `GetDrivers()`, `GetTrains()`
-
-**Методы программы:**
-- `FindDriver(trains, drivers, number)` — машинист поезда.
-- `FindDirection(directions, train)` — направление поезда.
-- `GetTotalCapacity(trains)` — суммарная вместимость.
-- `GetDirectionsByTrainCount(trains, directions)` — число поездов по направлениям.
-- `PrintAllTrains(trains, drivers, directions)` — вывод поездов.
-
-**Вывод:**
-```
-Количество поездов: 10, машинистов: 5
-Поезд №123 — машинист Иванов И.И., направление "Москва-Питер"
-Общая вместимость: 5000 пассажиров
-Поездов по направлениям: Москва-Питер — 3, Москва-Казань — 2
+Не найдено: FindDriver("№999") → null
 ```
 
 ---
 
 ## Вариант 28. Галерея
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    EXHIBITION ||--o{ PAINTING : "выставляет"
+    ARTIST     ||--o{ PAINTING : "написал"
+
+    EXHIBITION {
+        int      Id   PK
+        string   Name
+        DateTime Date
+    }
+    ARTIST {
+        int    Id       PK
+        string FullName
+        string Country
+        string Style
+    }
+    PAINTING {
+        int     Id           PK
+        string  Title
+        int     ExhibitionId FK
+        int     ArtistId     FK
+        int     Year
+        decimal Price
+    }
 ```
-Exhibition (1) ────< Painting >──── (1) Artist
-  Id                 Id               Id
-  Name               Title            FullName
-  Date               ExhibitionId     PaintingId
-                     ArtistId         Country
-                     Year             Style
-                     Price
+
+### Классы
+
+**`Exhibition`** — `Id`, `Name`, `Date`; `Info` — `"Постимпрессионизм (01.09.2025)"`.
+
+**`Artist`** — `Id`, `FullName`, `Country`, `Style`; `IsForeign` (`Country != "Россия"`); `GetInfo()` — `"Ван Гог (Нидерланды, постимпрессионизм)"`.
+
+**`Painting`** — `Id`, `Title`, `ExhibitionId`, `ArtistId`, `Year`, `Price`; `IsValuable` (`Price > 1000000`); `GetInfo()` — `"Подсолнухи (1888, 5000000 руб.)"`.
+
+### Правила предметной области
+
+- `Title` картины уникален. `Name` выставки уникально. `FullName` художника **не уникально**. `Year` — целое. `Date` в CSV — `dd.MM.yyyy`. `Price` ≥ 0.
+
+### Репозитории
+
+`GetExhibitions()`, `GetArtists()`, `GetPaintings()`.
+
+### Методы программы
+
+**1. Поиск художника картины.** Не найдено — `null`.
+
+**2. Поиск выставки картины.** Не найдено — `null`.
+
+**3. Общая стоимость картин.** Пустой список — `0`.
+
+**4. Художник с максимальным числом картин.** При равенстве — первый. Нет картин — `null`.
+
+**5. Вывод всех картин.** `<GetInfo()> — художник <FullName>, выставка "<Name>"`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindArtist("Подсолнухи"): Ван Гог (Нидерланды, постимпрессионизм)
+2. FindExhibition(painting "Подсолнухи"): Постимпрессионизм (01.09.2025)
+3. GetTotalPrice: 15000000 руб.
+4. GetArtistWithMostPaintings: Ван Гог (3)
+5. PrintAllPaintings:
+"Подсолнухи (1888, 5000000 руб.)" — художник Ван Гог, выставка "Постимпрессионизм"
+"Звёздная ночь (1889, 6000000 руб.)" — художник Ван Гог, выставка "Постимпрессионизм"
 
-**Классы, свойства и методы:**
-
-**`Exhibition`**
-- Свойства: `Id`, `Name`, `Date`
-- Вычисляемое свойство `Info` — `"Постимпрессионизм (01.09.2025)"`
-
-**`Artist`**
-- Свойства: `Id`, `FullName`, `PaintingId`, `Country`, `Style`
-- Вычисляемое свойство `IsForeign` — `true`, если `Country != "Россия"`
-- Метод `GetInfo()` — `"Ван Гог (Нидерланды, постимпрессионизм)"`
-
-**`Painting`**
-- Свойства: `Id`, `Title`, `ExhibitionId`, `ArtistId`, `Year`, `Price`
-- Вычисляемое свойство `IsValuable` — `true`, если `Price > 1000000`
-- Метод `GetInfo()` — `"Подсолнухи (1888, 5000000 руб.)"`
-
-**Репозитории:** `GetExhibitions()`, `GetArtists()`, `GetPaintings()`
-
-**Методы программы:**
-- `FindArtist(paintings, artists, title)` — художник картины.
-- `FindExhibition(exhibitions, painting)` — выставка картины.
-- `GetTotalPrice(paintings)` — общая стоимость.
-- `GetArtistWithMostPaintings(paintings, artists)` — художник с макс. картин.
-- `PrintAllPaintings(paintings, artists, exhibitions)` — вывод картин.
-
-**Вывод:**
-```
-Количество картин: 12, художников: 5
-"Подсолнухи" написал Ван Гог, выставка "Постимпрессионизм"
-Общая стоимость: 15000000 руб.
-Художник с макс. картин: Ван Гог (3)
+Не найдено: FindArtist("Неизвестная картина") → null
 ```
 
 ---
 
 ## Вариант 29. Стадион
 
-**ERD:**
+### ERD
+
+```mermaid
+erDiagram
+    COACH ||--o{ TEAM  : "тренирует"
+    TEAM  ||--o{ MATCH : "играет"
+
+    COACH {
+        int    Id       PK
+        string FullName
+    }
+    TEAM {
+        int     Id       PK
+        string  Name
+        int     CoachId  FK
+        string  City
+        decimal Budget
+    }
+    MATCH {
+        int      Id       PK
+        int      TeamId   FK
+        string   Opponent
+        DateTime Date
+        string   Score
+        string   Stadium
+    }
 ```
-Coach (1) ────< Team >──── (1) Match
-  Id            Id            Id
-  FullName      Name          TeamId
-  TeamId        CoachId       Opponent
-                City          Date
-                Budget        Score
-                              Stadium
+
+### Классы
+
+**`Coach`** — `Id`, `FullName`; `GetInfo()` — `"Иванов И.И."`.
+
+**`Team`** — `Id`, `Name`, `CoachId`, `City`, `Budget`; `IsRich` (`Budget > 100000000`); `GetInfo()` — `"Спартак (Москва, 500000000 руб.)"`.
+
+**`Match`** — `Id`, `TeamId`, `Opponent`, `Date`, `Score`, `Stadium`; `GetGoals()` — сумма голов из строки `Score` через `Split(':')`; `GetInfo()` — `"Спартак — Зенит (2:1, 01.09.2025)"`.
+
+### Правила предметной области
+
+- `Name` команды уникально. `Score` в формате `"X:Y"`. `Date` в CSV — `dd.MM.yyyy`.
+
+### Репозитории
+
+`GetCoaches()`, `GetTeams()`, `GetMatches()`.
+
+### Методы программы
+
+**1. Поиск тренера команды.** Не найдено — `null`.
+
+**2. Поиск команды матча.** Не найдено — `null`.
+
+**3. Общее количество голов.** Сумма `GetGoals()` по всем матчам. Пустой список — `0`.
+
+**4. Очки команд.** `Dictionary<string, int>`: победа +3, ничья +1, поражение +0.
+
+**5. Вывод всех матчей.** `<GetInfo()> — команда "<Team.Name>", тренер <Coach.FullName>`. Не найдено — `"—"`.
+
+### Пример вывода
+
 ```
+1. FindCoach("Спартак"): Иванов И.И.
+2. FindTeam(match "Спартак — Зенит"): Спартак (Москва, 500000000 руб.)
+3. GetTotalGoals: 24
+4. GetTeamStats: Спартак — 15, Зенит — 12, ЦСКА — 9
+5. PrintAllMatches:
+"Спартак — Зенит (2:1, 01.09.2025)" — команда "Спартак", тренер Иванов И.И.
+"ЦСКА — Динамо (1:1, 08.09.2025)" — команда "ЦСКА", тренер Петров П.П.
 
-**Классы, свойства и методы:**
-
-**`Coach`**
-- Свойства: `Id`, `FullName`, `TeamId`
-- Метод `GetInfo()` — `"Иванов И.И."`
-
-**`Team`**
-- Свойства: `Id`, `Name`, `CoachId`, `City`, `Budget`
-- Вычисляемое свойство `IsRich` — `true`, если `Budget > 100000000`
-- Метод `GetInfo()` — `"Спартак (Москва, 500000000 руб.)"`
-
-**`Match`**
-- Свойства: `Id`, `TeamId`, `Opponent`, `Date`, `Score`, `Stadium`
-- Метод `GetGoals()` — сумма голов из строки `Score` (парсинг через `Split(':')`)
-- Метод `GetInfo()` — `"Спартак — Зенит (2:1, 01.09.2025)"`
-
-**Репозитории:** `GetCoaches()`, `GetTeams()`, `GetMatches()`
-
-**Методы программы:**
-- `FindCoach(teams, coaches, name)` — тренер команды.
-- `FindTeam(teams, match)` — команда матча.
-- `GetTotalGoals(matches)` — суммарное число голов.
-- `GetTeamStats(matches, teams)` — очки команд (победа +3, ничья +1).
-- `PrintAllMatches(matches, teams, coaches)` — вывод матчей.
-
-**Вывод:**
-```
-Количество матчей: 8, команд: 4
-Команда "Спартак" — тренер Иванов И.И., матч против "Зенит" (2:1)
-Общее количество голов: 24
-Турнирная таблица: Спартак — 15, Зенит — 12, ЦСКА — 9
+Не найдено: FindCoach("Неизвестная команда") → null
 ```
 
 ---
@@ -1698,59 +2408,50 @@ Coach (1) ────< Team >──── (1) Match
 ## Вопросы для подготовки к сдаче
 
 ### Теория ООП
-
 1. Что такое класс и объект? В чём разница?
 2. Что такое автосвойство? Чем оно отличается от обычного свойства с полем?
 3. Что такое вычисляемое свойство? Когда его использовать вместо метода?
-4. В чём разница между свойством и методом? Когда что выбирать?
+4. В чём разница между свойством и методом?
 5. Что такое конструктор? Какие виды конструкторов бывают?
-6. Что такое инкапсуляция? Как она реализуется в C#?
-7. Что такое внешний ключ в контексте классов? Как организовать связь между классами?
+6. Что такое инкапсуляция?
+7. Что такое внешний ключ в контексте классов?
 8. Что такое `null`? Как правильно обрабатывать `null` при поиске?
 
 ### Коллекции
-
-9. Чем отличается `List<T>` от массива `T[]`? Когда что использовать?
-10. Что такое `Dictionary<TKey, TValue>`? Когда его применять?
+9. Чем `List<T>` отличается от массива `T[]`?
+10. Что такое `Dictionary<TKey, TValue>`?
 11. Как добавить элемент в `List<T>`? Как проверить наличие ключа в `Dictionary`?
 12. Как перебрать элементы `Dictionary` без LINQ?
-13. Как отсортировать `List<T>` без LINQ? Опишите алгоритм пузырьковой сортировки.
+13. Как отсортировать `List<T>` без LINQ? Опишите пузырьковую сортировку.
 
 ### Работа с CSV
-
-14. Как прочитать файл в C#? Какой метод использовать?
-15. Как разбить строку CSV на части? Какой метод использовать?
-16. Как преобразовать строку в число? Какие методы использовать?
-17. Как обработать ситуацию, когда файл пустой или содержит меньше строк, чем ожидается?
-18. Почему важно проверять `parts.Length` перед доступом к элементам массива?
+14. Как прочитать файл в C#?
+15. Как разбить строку CSV на части?
+16. Как преобразовать строку в число?
+17. Как обработать ситуацию с пустым файлом?
+18. Почему важно проверять `parts.Length`?
 
 ### Архитектура программы
-
-19. Зачем разделять `InMemoryRepository` и `CsvRepository`? Что это даёт?
+19. Зачем разделять `InMemoryRepository` и `CsvRepository`?
 20. Почему каждый класс должен быть в отдельном файле?
-21. Как выбрать источник данных через `switch`? Опишите структуру.
-22. Что такое разделение ответственности (Single Responsibility)? Как оно применяется в задании?
+21. Как выбрать источник данных через `switch`?
+22. Что такое Single Responsibility?
 
 ### Методы поиска и аналитики
-
 23. Как найти связанный объект по внешнему ключу без LINQ?
 24. Как найти максимальное значение в `Dictionary` без LINQ?
-25. Как сгруппировать объекты по какому-либо признаку без LINQ?
+25. Как сгруппировать объекты по признаку без LINQ?
 26. Как подсчитать количество объектов с одинаковым значением поля?
-27. Как реализовать поиск по вводу пользователя через `Console.ReadLine()`?
+27. Как реализовать поиск по вводу через `Console.ReadLine()`?
 
 ### Именование и оформление
-
-28. Как правильно именовать классы, свойства и методы в C#?
+28. Как правильно именовать классы, свойства и методы?
 29. Как правильно именовать приватные поля?
-30. Зачем нужны XML-комментарии (`/// <summary>`)?
+30. Зачем нужны XML-комментарии?
 
-### Практические вопросы
-
+### Практические
 31. Что произойдёт, если внешний ключ ссылается на несуществующую запись?
-32. Как проверить, что поиск не нашёл результат? Что вернуть в этом случае?
-33. Как вывести данные в формате `"Книга "X" написана Y, издательство Z"`?
-34. Как избежать деления на ноль при вычислении среднего?
-35. Как протестировать программу с обоими источниками данных и убедиться, что результаты совпадают?
-
----
+32. Как проверить, что поиск не нашёл результат?
+33. Как вывести данные в формате `"Книга "X" написана Y"`?
+34. Как избежать деления на ноль?
+35. Как убедиться, что InMemory и CSV дают одинаковые результаты?
