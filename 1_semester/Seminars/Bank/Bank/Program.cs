@@ -15,7 +15,7 @@
             account1.MakeWithdrawal(200, DateTime.UtcNow, ":(");
             Console.WriteLine(account1.Balance);
             
-            Console.WriteLine(account1.GetAccountHistory());
+            Console.WriteLine(account1.GetAccountHistory()); 
             
             try
             {
@@ -26,6 +26,31 @@
                 Console.WriteLine(e.Message);
             }
 
-        }
+            InterestEarningAccount interest = new InterestEarningAccount("Yana", 1000);
+            interest.PerformMonthAndTransactions();
+
+            Console.WriteLine(interest.GetAccountHistory());
+
+            LineOfCreditAccount lineOfCredit = new LineOfCreditAccount("Yana", 0, 1000m);
+            lineOfCredit.MakeWithdrawal(500m, DateTime.UtcNow, "credit");
+
+            GiftCartAccount giftcart = new GiftCartAccount("Yana", 1000m, 5000m);
+
+            List<BankAccount> accounts = new List<BankAccount>();
+            accounts.Add(account1);
+            accounts.Add(interest);
+            accounts.Add(lineOfCredit);
+            accounts.Add(giftcart);
+            
+            foreach (BankAccount account in accounts)
+            {
+                Console.WriteLine(account);    //  == Console.WriteLine(account.ToString());
+                account.PerformMonthAndTransactions();
+                Console.WriteLine(account.GetAccountHistory());
+            }
+
+            lineOfCredit.MakeWithdrawal(600m, DateTime.UtcNow, "credit");
+            Console.WriteLine(lineOfCredit.GetAccountHistory());
+;        }
     }
 }
