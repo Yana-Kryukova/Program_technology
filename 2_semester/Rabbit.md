@@ -256,4 +256,10 @@ Console.ReadLine();
 - Документация CloudAMQP: [cloudamqp.com/docs](https://www.cloudamqp.com/docs/index.html).
 - Про `BasicQos` и справедливую раздачу — в том же туториале, раздел «Fair dispatch».
 
+---
+#№ Примеры 
+
+- RabbitMQ.Client - Отправитель https://github.com/Rpry/OTUS_RabbitMQ_Producer 
+- RabbitMQ.Client - Получатель https://github.com/Rpry/OTUS_RabbitMQ_Consumer 
+
 Удачи! 🚕
