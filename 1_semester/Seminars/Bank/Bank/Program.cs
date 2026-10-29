@@ -30,9 +30,9 @@
             interest.PerformMonthAndTransactions();
 
             Console.WriteLine(interest.GetAccountHistory());
-
-            LineOfCreditAccount lineOfCredit = new LineOfCreditAccount("Yana", 0, 1000m);
-            lineOfCredit.MakeWithdrawal(500m, DateTime.UtcNow, "credit");
+            
+            LineOfCreditAccount lineOfCredit = new LineOfCreditAccount("Yana", 0, 1000m);//1
+            lineOfCredit.MakeWithdrawal(500m, DateTime.UtcNow, "credit");//2
 
             GiftCartAccount giftcart = new GiftCartAccount("Yana", 1000m, 5000m);
 
@@ -45,7 +45,7 @@
             foreach (BankAccount account in accounts)
             {
                 Console.WriteLine(account);    //  == Console.WriteLine(account.ToString());
-                account.PerformMonthAndTransactions();
+                account.PerformMonthAndTransactions(); // работает полиморфизм
                 Console.WriteLine(account.GetAccountHistory());
             }
 
