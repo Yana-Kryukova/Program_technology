@@ -49,8 +49,6 @@
                 Console.WriteLine(account.GetAccountHistory());
             }
 
-            lineOfCredit.MakeWithdrawal(600m, DateTime.UtcNow, "credit");
-            Console.WriteLine(lineOfCredit.GetAccountHistory());
 ;        }
     }
 }
