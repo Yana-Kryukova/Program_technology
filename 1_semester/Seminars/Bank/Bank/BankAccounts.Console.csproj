@@ -9,4 +9,7 @@
 	<PropertyGroup>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\src\BankAccounts.Core\BankAccounts.Core.csproj" />
+	</ItemGroup>
 </Project>
