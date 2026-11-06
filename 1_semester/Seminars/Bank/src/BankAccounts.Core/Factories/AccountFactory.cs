@@ -25,4 +25,33 @@ public class AccountFactory
             _numbers,
             new StrictWithdrawalPolicy(),
             new IMonthEndRule[] { new InterestOnPositiveBalanceRule(0.2m, 500m) });
+
+    public BankAccount CreateDebitAccount(string owner, decimal initialBalance)
+    => new BankAccount(
+        _clock,
+        owner,
+        initialBalance,
+        0m,
+        _numbers,
+        new StrictWithdrawalPolicy());
+
+    public BankAccount CreateLineOfCredit(string owner, decimal creditLimit)
+    => new BankAccount(
+        _clock,
+        owner,
+        0m,
+        -creditLimit,
+        _numbers,
+        new OverdraftFeeWithdrawalPolicy(20m),
+        new IMonthEndRule[] { new InterestNegativeBalanceRule(0.07m) });
+
+    public BankAccount CreateGiftCard(string owner, decimal initialBalance, decimal monthlyDeposit)
+    => new BankAccount(
+        _clock,
+    owner,
+    initialBalance,
+    0m,
+    _numbers,
+    new StrictWithdrawalPolicy(),
+    new IMonthEndRule[] { new MonthlyDepositeRule(monthlyDeposit) });
 }

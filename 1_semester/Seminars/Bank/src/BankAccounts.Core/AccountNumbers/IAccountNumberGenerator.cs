@@ -5,3 +5,4 @@ public interface IAccountNumberGenerator
 {
     string Next();
 }
+
